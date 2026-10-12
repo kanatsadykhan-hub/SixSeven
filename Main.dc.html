@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Six Seven — леденцы для партнёров</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&amp;family=Pacifico&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#1E1F26}
+.s7{position:relative;overflow:hidden;background:#1E1F26;color:#FFF6E5;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;line-height:1.55;text-transform:uppercase}
+.s7 *{box-sizing:border-box}
+.s7 a{color:inherit;text-decoration:none}
+.hd{font-family:'Oswald','Arial Narrow',sans-serif;font-weight:700;text-transform:uppercase;margin:0;letter-spacing:.01em}
+.script{font-family:'Pacifico','Brush Script MT',cursive;text-transform:none;font-weight:400;letter-spacing:0}
+.wrap{max-width:1831px;margin:0 auto;padding:0 clamp(16px,4.4vw,64px);position:relative;z-index:2}
+.grain{position:absolute;inset:0;z-index:50;pointer-events:none;mix-blend-mode:lighten;opacity:.6;background-size:384px 384px}
+.glass{background:rgba(255,255,255,.01);background-blend-mode:luminosity;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.1);position:relative;overflow:hidden}
+.glass::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1.4px;background:linear-gradient(180deg,rgba(255,255,255,.45) 0%,rgba(255,255,255,.15) 20%,rgba(255,255,255,0) 40%,rgba(255,255,255,0) 60%,rgba(255,255,255,.15) 80%,rgba(255,255,255,.45) 100%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.glass-dim{background:rgba(255,255,255,.04)}
+.hover-lift{transition:background .25s ease,transform .25s ease}
+.hover-lift:hover{background:rgba(255,255,255,.10)}
+.nav a{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.06em;transition:color .2s}
+.nav a:hover{color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 28px;border-radius:999px;font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;transition:transform .2s ease,background .2s ease}
+.btn:hover{transform:translateY(-2px)}
+.btn-accent{background:var(--accent);color:#1E1F26 !important}
+.btn-accent:hover{background:#FFE170}
+.sq{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:1rem;transition:background .2s}
+.sq:hover{background:rgba(255,255,255,.12)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:48px;align-items:center;padding:48px 0 104px}
+.vframe{width:360px;aspect-ratio:9/16;border-radius:32px;padding:10px}
+.vframe video{width:100%;height:100%;object-fit:cover;border-radius:24px;display:block}
+.facts{display:flex;flex-wrap:wrap;gap:16px}
+.fact{border-radius:20px;padding:16px 24px;min-width:150px}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:24px}
+.row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;flex-wrap:wrap}
+.cta-row{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;flex-wrap:wrap}
+.term{display:grid;grid-template-columns:minmax(120px,200px) minmax(0,1fr);gap:24px;align-items:baseline;padding:22px 28px;border-radius:24px}
+.chip{display:inline-flex;align-items:center;min-height:44px;padding:0 22px;border-radius:999px;font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.06em}
+.contact-row{display:flex;align-items:center;gap:18px;padding:18px 26px;min-height:76px;border-bottom:1px solid rgba(255,255,255,.12);transition:background .2s}
+.contact-row:hover{background:rgba(255,255,255,.08)}
+@media (max-width:1023px){
+.nav-wrap{display:none}
+.hero-grid{grid-template-columns:1fr;gap:40px;padding-bottom:72px}
+.vframe{width:min(300px,100%)}
+.term{grid-template-columns:1fr;gap:6px}
+}
+@media (max-width:640px){
+.fact{min-width:0;flex:1 1 120px;padding:14px 16px}
+.cta-row{align-items:stretch}
+}
+</style>
+</helmet>
+
+<div class="s7" style="--accent: {{accent}}">
+<div class="grain" style="background-image:url(./assets/725d1fb25b74d4aa47c8f55c1c94d81d.png)"></div>
+
+<!-- ============ SECTION 1: HERO ============ -->
+<section id="top" style="position:relative;overflow:hidden;border-radius:0 0 32px 32px;min-height:880px;background:#14151A">
+<img src="./assets/a7507885109323621e057f3ff10ef703.jpg" alt="" style="position:absolute;inset:-60px;width:calc(100% + 120px);height:calc(100% + 120px);object-fit:cover;filter:blur(38px) saturate(1.25) brightness(.5)">
+<div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,21,26,.86) 0%,rgba(20,21,26,.45) 55%,rgba(20,21,26,.2) 100%)"></div>
+<div class="wrap">
+<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:28px">
+<a href="#top" aria-label="Six Seven — на главную"><img src="./assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven" style="height:68px;width:auto;display:block"></a>
+<div class="nav-wrap glass" style="border-radius:28px;padding:24px 52px">
+<nav class="nav" style="display:flex;gap:40px">
+<a href="#about">Почему Six Seven</a>
+<a href="#flavors">Вкусы</a>
+<a href="#heroes">Герои</a>
+<a href="#terms">Условия</a>
+<a href="#contact">Контакты</a>
+</nav>
+</div>
+<a class="btn btn-accent" href="#contact">Получить прайс</a>
+</header>
+
+<div class="hero-grid">
+<div style="min-width:0">
+<p style="margin:0 0 24px;font-size:13px;letter-spacing:.14em;color:rgba(255,246,229,.8)">Леденцы на палочке · для дистрибьюторов, сетей и точек у кассы</p>
+<div style="position:relative;max-width:900px;padding-bottom:64px">
+<h1 class="hd" style="font-size:clamp(40px,7.2vw,104px);line-height:1.02">Мем-бренд<br>( 67 ) на вашей кассе</h1>
+<span class="script" style="position:absolute;right:0;bottom:0;font-size:clamp(26px,4vw,56px);color:var(--accent);transform:rotate(-2deg);mix-blend-mode:exclusion;opacity:.92;white-space:nowrap">леденцы на палочке</span>
+</div>
+<p style="margin:0 0 36px;max-width:520px;font-size:15px;color:rgba(255,246,229,.9)">Шесть вкусов, шесть узнаваемых героев и натуральные красители с ароматизаторами. Леденец, который уже знают по мему и который хочется взять на кассе.</p>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:40px">
+<a class="btn btn-accent" href="#contact">Запросить прайс и условия</a>
+<a class="btn glass" href="#flavors">Смотреть вкусы</a>
+</div>
+<div class="facts" style="margin-bottom:40px">
+<div class="fact glass glass-dim"><div class="hd" style="font-size:36px;line-height:1.1">6</div><div style="font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">вкусов в линейке</div></div>
+<div class="fact glass glass-dim"><div class="hd" style="font-size:36px;line-height:1.1">6 г</div><div style="font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">леденец на палочке</div></div>
+<div class="fact glass glass-dim"><div class="hd" style="font-size:36px;line-height:1.1">1 200</div><div style="font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">штук в коробе</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+<a class="sq glass" href="#contact" aria-label="Написать на почту"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></a>
+<a class="sq glass" href="#contact" aria-label="Написать в Telegram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path></svg></a>
+<a class="sq glass" href="#contact" aria-label="Написать в WhatsApp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"></path></svg></a>
+</div>
+</div>
+
+<div class="vframe glass glass-dim" style="justify-self:center">
+<video src="./assets/05398cd6c32e3c0871c8bf4a622dfa34.mp4" poster="./assets/a7507885109323621e057f3ff10ef703.jpg" autoPlay="{{ true }}" loop="{{ true }}" muted="{{ true }}" playsInline="{{ true }}" preload="auto"></video>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ SECTION 2: ABOUT ============ -->
+<section id="about" style="position:relative;overflow:hidden;min-height:900px;padding:96px 0 112px">
+<video src="./assets/fe214e00674fad0de3b550b1d5191e22.mp4" autoPlay="{{ true }}" loop="{{ true }}" muted="{{ true }}" playsInline="{{ true }}" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,31,38,.72) 0%,rgba(30,31,38,.5) 45%,rgba(30,31,38,.92) 100%)"></div>
+<div class="wrap">
+<div class="row-top" style="margin-bottom:96px">
+<div style="position:relative;padding-bottom:40px">
+<h2 class="hd" style="font-size:clamp(32px,5.2vw,76px);line-height:1.04">Почему это<br>продаётся</h2>
+<span class="script" style="position:absolute;right:-8%;bottom:-6px;font-size:clamp(36px,5.2vw,72px);color:var(--accent);transform:rotate(-4deg);mix-blend-mode:exclusion;opacity:.95">67</span>
+</div>
+<p style="margin:0;max-width:300px;font-size:14px;color:#FFF6E5">Герои, которых запоминают. Мем, который уже живёт в разговорах детей. Леденец, у которого есть история на кассе.</p>
+</div>
+
+<div class="grid-4">
+<article class="glass glass-dim hover-lift" style="border-radius:32px;padding:32px 28px;min-height:300px">
+<div class="hd" style="font-size:44px;color:var(--accent);line-height:1">01</div>
+<h3 class="hd" style="font-size:24px;line-height:1.15;margin:18px 0 14px">Спрос уже создан мемом</h3>
+<p style="margin:0;font-size:13px;color:rgba(255,246,229,.88)">«67» — слово 2025 года по версии Dictionary.com. Покупателю не нужно объяснять, зачем эта конфета: он уже слышал это число.</p>
+</article>
+<article class="glass glass-dim hover-lift" style="border-radius:32px;padding:32px 28px;min-height:300px">
+<div class="hd" style="font-size:44px;color:var(--accent);line-height:1">02</div>
+<h3 class="hd" style="font-size:24px;line-height:1.15;margin:18px 0 14px">Цена подтверждена рынком</h3>
+<p style="margin:0;font-size:13px;color:rgba(255,246,229,.88)">Ближайший натуральный аналог в аптеках Казахстана стоит 135–240 ₸ за штуку. Рекомендованная цена Six Seven на полке — 200 ₸, не ниже 170 ₸.</p>
+</article>
+<article class="glass glass-dim hover-lift" style="border-radius:32px;padding:32px 28px;min-height:300px">
+<div class="hd" style="font-size:44px;color:var(--accent);line-height:1">03</div>
+<h3 class="hd" style="font-size:24px;line-height:1.15;margin:18px 0 14px">Уже на полках</h3>
+<p style="margin:0;font-size:13px;color:rgba(255,246,229,.88)">Леденцы продаются в аптечных сетях Казахстана. Каждая точка получает стойку с героями — на кассу, где решение принимается за секунду.</p>
+</article>
+<article class="glass glass-dim hover-lift" style="border-radius:32px;padding:32px 28px;min-height:300px">
+<div class="hd" style="font-size:44px;color:var(--accent);line-height:1">04</div>
+<h3 class="hd" style="font-size:24px;line-height:1.15;margin:18px 0 14px">Натуральный состав</h3>
+<p style="margin:0;font-size:13px;color:rgba(255,246,229,.88)">Красители и ароматизаторы — натуральные. Это аргумент для аптек и родителей, которым важно, что ребёнок берёт в рот.</p>
+</article>
+</div>
+</div>
+</section>
+
+<!-- ============ SECTION 3: FLAVORS ============ -->
+<section id="flavors" style="background:#1E1F26;padding:96px 0 112px">
+<div class="wrap">
+<div class="row-top" style="margin-bottom:56px;align-items:flex-end">
+<h2 class="hd" style="font-size:clamp(32px,5.2vw,76px);line-height:1.04">Линейка из<br><span style="display:inline-block;margin-left:clamp(48px,8vw,128px)"><span class="script" style="color:var(--accent);font-size:1.02em">шести</span> вкусов</span></h2>
+<a href="#contact" style="display:block;min-width:220px" aria-label="Запросить прайс по всем вкусам">
+<div style="display:flex;align-items:center;gap:14px">
+<span class="hd" style="font-size:clamp(32px,5.2vw,76px);line-height:1">Прайс</span>
+<span class="hd" style="font-size:clamp(18px,2.4vw,34px);line-height:1.05">по<br>запросу</span>
+</div>
+<div style="height:clamp(6px,.7vw,10px);background:var(--accent);margin-top:12px;width:100%"></div>
+</a>
+</div>
+
+<div class="grid-3">
+<sc-for list="{{ flavors }}" as="f" hint-placeholder-count="6">
+<article class="glass glass-dim hover-lift" style="border-radius:32px;padding:18px">
+<div style="position:relative;aspect-ratio:735/915;border-radius:24px;overflow:hidden;background:#2C2E35">
+<img src="{{ f.tile }}" alt="Леденец Six Seven, вкус: {{ f.name }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block">
+</div>
+<div class="glass" style="border-radius:20px;padding:16px 20px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+<div>
+<div style="font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.72)">Вкус:</div>
+<div class="hd" style="font-size:20px;line-height:1.2">{{ f.name }}</div>
+</div>
+<a href="#contact" aria-label="Запросить условия по вкусу {{ f.name }}" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;background:linear-gradient(135deg, {{ f.c1 }}, {{ f.c2 }});color:{{ f.ink }};box-shadow:0 8px 20px {{ f.glow }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"></path></svg>
+</a>
+</div>
+</article>
+</sc-for>
+</div>
+</div>
+</section>
+
+<!-- ============ HEROES ============ -->
+<section id="heroes" style="background:#1E1F26;padding:32px 0 112px">
+<div class="wrap">
+<div class="row-top" style="margin-bottom:56px;align-items:flex-end">
+<h2 class="hd" style="font-size:clamp(32px,5.2vw,76px);line-height:1.04">Команда<br><span style="display:inline-block;margin-left:clamp(48px,8vw,128px)"><span class="script" style="color:var(--accent);font-size:1.02em">шести</span> героев</span></h2>
+<p style="margin:0;max-width:340px;font-size:14px">У каждого вкуса свой герой, свой цвет и своя форма. На полке и на стойке линейка читается с трёх метров.</p>
+</div>
+<div class="grid-3">
+<sc-for list="{{ flavors }}" as="f" hint-placeholder-count="6">
+<article class="glass glass-dim hover-lift" style="border-radius:32px;padding:18px">
+<div style="position:relative;aspect-ratio:1280/853;border-radius:24px;overflow:hidden;background:{{ f.c1 }}">
+<img src="{{ f.sheet }}" alt="Герой вкуса {{ f.name }}: вид спереди, сбоку и сзади" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block">
+</div>
+<div style="padding:16px 8px 4px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+<span class="hd" style="font-size:20px">{{ f.name }}</span>
+<span style="font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.72)">Герой вкуса</span>
+</div>
+</article>
+</sc-for>
+</div>
+</div>
+</section>
+
+<!-- ============ TERMS ============ -->
+<section id="terms" style="background:#1E1F26;padding:32px 0 120px">
+<div class="wrap">
+<div class="row-top" style="margin-bottom:56px">
+<h2 class="hd" style="font-size:clamp(32px,5.2vw,76px);line-height:1.04">Как мы<br><span style="display:inline-block;margin-left:clamp(48px,8vw,128px)"><span class="script" style="color:var(--accent);font-size:1.02em">работаем</span> с вами</span></h2>
+<p style="margin:0;max-width:340px;font-size:14px">Условия зависят от канала и объёма. Ниже — то, что одинаково для всех партнёров.</p>
+</div>
+
+<div class="grid-3" style="grid-template-columns:repeat(auto-fit,minmax(min(480px,100%),1fr));margin-bottom:56px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div class="term glass glass-dim"><div class="hd" style="font-size:22px;color:var(--accent)">Формат</div><div style="font-size:13px">Леденец на палочке 6 г · 6 вкусов · 1 200 штук в коробе.</div></div>
+<div class="term glass glass-dim"><div class="hd" style="font-size:22px;color:var(--accent)">Опт</div><div style="font-size:13px">Оптовая цена зависит от канала и объёма. Отправим прайс под вашу точку или сеть.</div></div>
+<div class="term glass glass-dim"><div class="hd" style="font-size:22px;color:var(--accent)">Розница</div><div style="font-size:13px">Рекомендованная цена на полке — 200 ₸, не ниже 170 ₸. Единая цена во всех каналах: никто не демпингует соседа по кассе.</div></div>
+<div class="term glass glass-dim"><div class="hd" style="font-size:22px;color:var(--accent)">Стойка</div><div style="font-size:13px">POS-стойка с героями на кассу: малая на 12 ячеек и большая на 18. Условия размещения согласуем при заявке.</div></div>
+</div>
+
+<div class="glass glass-dim" style="border-radius:32px;padding:36px 32px">
+<h3 class="hd" style="font-size:28px;margin-bottom:24px">Где работает</h3>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:40px">
+<span class="chip glass">Аптеки</span>
+<span class="chip glass">АЗС</span>
+<span class="chip glass">Магазины у дома</span>
+<span class="chip glass">Минимаркеты</span>
+<span class="chip glass">Детские пространства</span>
+<span class="chip glass">HoReCa</span>
+<span class="chip glass">Дистрибьюторы</span>
+</div>
+<h3 class="hd" style="font-size:28px;margin-bottom:24px">Как начать</h3>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;gap:20px;align-items:baseline"><span class="hd" style="font-size:36px;line-height:1;color:var(--accent);min-width:56px">01</span><span style="font-size:13px">Оставляете заявку — коротко: кто вы и сколько у вас точек.</span></div>
+<div style="display:flex;gap:20px;align-items:baseline"><span class="hd" style="font-size:36px;line-height:1;color:var(--accent);min-width:56px">02</span><span style="font-size:13px">Получаете прайс и условия под ваш канал.</span></div>
+<div style="display:flex;gap:20px;align-items:baseline"><span class="hd" style="font-size:36px;line-height:1;color:var(--accent);min-width:56px">03</span><span style="font-size:13px">Пилотная поставка и стойка на кассу.</span></div>
+<div style="display:flex;gap:20px;align-items:baseline"><span class="hd" style="font-size:36px;line-height:1;color:var(--accent);min-width:56px">04</span><span style="font-size:13px">Дозаказ по мере продаж.</span></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ SECTION 4: CTA ============ -->
+<section id="contact" style="position:relative;overflow:hidden;min-height:840px;padding:112px 0 96px">
+<img src="./assets/3871712f329e103dd7d56a6cbd1aab1b.jpg" alt="" style="position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);object-fit:cover;filter:blur(14px) saturate(1.15) brightness(.55)">
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,#1E1F26 0%,rgba(30,31,38,.35) 30%,rgba(30,31,38,.55) 100%)"></div>
+<div class="wrap">
+<div class="cta-row">
+<div class="glass glass-dim" style="border-radius:1.25rem;width:min(100%,460px)">
+<a class="contact-row" href="#contact"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path></svg><span><span style="display:block;font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">Telegram</span><span class="hd" style="font-size:20px">[@TELEGRAM]</span></span></a>
+<a class="contact-row" href="#contact"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"></path></svg><span><span style="display:block;font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">WhatsApp</span><span class="hd" style="font-size:20px">[+7 XXX XXX XX XX]</span></span></a>
+<a class="contact-row" href="#contact" style="border-bottom:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg><span><span style="display:block;font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">Почта</span><span class="hd" style="font-size:20px">[EMAIL]</span></span></a>
+</div>
+
+<div style="position:relative;flex:1 1 520px;max-width:900px;margin-left:auto;text-align:right;padding-top:56px">
+<span class="script" style="position:absolute;left:0;top:0;font-size:clamp(26px,4.6vw,64px);color:var(--accent);transform:rotate(-3deg);mix-blend-mode:exclusion;opacity:.95">погнали!</span>
+<h2 class="hd" style="font-size:clamp(28px,5.2vw,76px);line-height:1.05"><span style="display:block;margin-bottom:clamp(12px,2.4vw,40px)">Станьте партнёром.</span>Поставьте стойку.<br>Заберите кассу.<br>Дозаказывайте.</h2>
+<div style="margin-top:40px"><a class="btn btn-accent" href="#contact">Запросить прайс и условия</a></div>
+</div>
+</div>
+</div>
+</section>
+
+<footer style="background:#1E1F26;padding:36px 0 44px">
+<div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap">
+<img src="./assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven" style="height:48px;width:auto">
+<div style="font-size:12px;letter-spacing:.06em;color:rgba(255,246,229,.72);max-width:560px">ИП Аубакиров Канат Садыханулы · Алматы, Казахстан · © 2026 Six Seven</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFD22E","options":["#FFD22E","#FF6B1A","#4DBB4A","#E62544"]},"$preview":{"width":1440,"height":7600}}'>
+class Component extends DCLogic {
+renderVals() {
+const T = (id) => '/_blob/' + id;
+return {
+accent: this.props.accent ?? '#FFD22E',
+flavors: [
+{ name: 'Яблоко', tile: T('e36bc9592b9b10a899a52f8390020b9e'), sheet: T('6b7007b93f287c872e7386ed1b1cb882'), c1: '#4DBB4A', c2: '#2F8F2E', ink: '#1E1F26', glow: 'rgba(77,187,74,.45)' },
+{ name: 'Апельсин', tile: T('cf0e4f7d29515479c8f53158a41947e7'), sheet: T('4513dab9afd145d5b6d6277b5906d91b'), c1: '#FF6B1A', c2: '#E04D00', ink: '#1E1F26', glow: 'rgba(255,107,26,.45)' },
+{ name: 'Клубника', tile: T('a3d6e6ed09f8beae6d0c3af63a91f65d'), sheet: T('8355dd59535996dd9643403abff0a503'), c1: '#FF2D55', c2: '#C4143A', ink: '#FFFFFF', glow: 'rgba(255,45,85,.45)' },
+{ name: 'Кола', tile: T('2589f875001164198e183543adc396f4'), sheet: T('3374b185efcadfebff75a485d35ee8e4'), c1: '#FF3B1F', c2: '#C21F08', ink: '#FFFFFF', glow: 'rgba(255,59,31,.45)' },
+{ name: 'Виноград', tile: T('b39aa6ce4dd6ada05fc21b986e9dbe75'), sheet: T('4eba2f4729b8ce2ec5b36220977f54d4'), c1: '#6B54B0', c2: '#4A3790', ink: '#FFFFFF', glow: 'rgba(107,84,176,.5)' },
+{ name: 'Лимон', tile: T('9b7e32f093ce9e8b5fa9f42007c4e65c'), sheet: T('13671022577c42b09b19b90b60a01863'), c1: '#FFD22E', c2: '#F2B705', ink: '#1E1F26', glow: 'rgba(255,210,46,.45)' }
+]
+};
+}
+}
+</script>
+</body>
+</html>
