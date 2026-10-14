@@ -124,6 +124,30 @@ for (const f of postFiles) {
   else console.log(`${where}: ${words} words`);
 }
 
+// ---------- landing (index.html) ----------
+{
+  const where = 'index.html';
+  const html = readFileSync(join(root, where), 'utf8');
+  const desc = attr(html, /<meta name="description" content="([^"]+)"/);
+  if (!desc) fail(where, 'missing meta description');
+  else if (descriptions.has(desc)) fail(where, `description duplicates ${descriptions.get(desc)}`);
+  const title = attr(html, /<title>([^<]+)<\/title>/);
+  if (titles.has(title)) fail(where, `title duplicates ${titles.get(title)}`);
+  if (attr(html, /<link rel="canonical" href="([^"]+)"/) !== siteBase) fail(where, `canonical should be ${siteBase}`);
+  if (!html.includes(`property="og:url" content="${siteBase}"`)) fail(where, 'og:url missing or wrong');
+  if (!html.includes(`href="${siteBase}blog/feed.xml"`)) fail(where, 'missing RSS link');
+  if ((html.match(/<h1[\s>]/g) || []).length !== 1) fail(where, 'expected exactly one <h1>');
+  const blog = (/<!-- BLOG:START[^>]*-->([\s\S]*?)<!-- BLOG:END -->/.exec(html) || [])[1] || '';
+  const cards = blog.match(/<article\b/g) || [];
+  if (cards.length !== Math.min(cfg.landingPostCount, slugs.size)) fail(where, `latest-posts block has ${cards.length} cards`);
+  for (const img of blog.match(/<img\b[^>]*>/g) || []) if (!/\balt="[^"]+"/.test(img)) fail(where, 'latest-posts image without alt');
+  // Header nav and footer each carry a Blog link, plus the "all posts" button.
+  if ((html.match(/href="blog\/"[\s>]/g) || []).length < 3) fail(where, 'expected Blog links in nav, footer and the latest-posts block');
+  for (const [, url] of html.matchAll(/href="(blog\/[^"]*)"/g)) {
+    if (!existsSync(join(root, url, 'index.html'))) fail(where, `broken link ${url}`);
+  }
+}
+
 // ---------- sitemap, robots, feed ----------
 const read = (p) => (existsSync(join(root, p)) ? readFileSync(join(root, p), 'utf8') : (fail(p, 'missing'), ''));
 const sitemap = read('sitemap.xml');

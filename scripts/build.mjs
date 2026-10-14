@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import cfg from '../site.config.mjs';
 import { parseFrontMatter, renderMarkdown, escapeHtml as x } from './markdown.mjs';
 import { imageSize } from './imagesize.mjs';
-import { layout, postBody, indexBody } from './templates.mjs';
+import { layout, postBody, indexBody, humanDate } from './templates.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const abs = (path = '') => cfg.origin + cfg.basePath + path;
@@ -191,10 +191,72 @@ ${items}
 `);
 }
 
+// The landing (index.html) is hand-written; only the blocks between these
+// markers are regenerated, so re-running the build is safe.
+function replaceBlock(html, name, content) {
+  const re = new RegExp(`(<!-- ${name}:START[^>]*-->)[\\s\\S]*?(<!-- ${name}:END -->)`);
+  if (!re.test(html)) throw new Error(`index.html is missing the ${name}:START / ${name}:END markers`);
+  return html.replace(re, (_, start, end) => `${start}\n${content}\n${end}`);
+}
+
+function landingSeo() {
+  const graph = [
+    { '@type': 'Organization', name: cfg.siteName, url: abs(), logo: abs(cfg.logo) },
+    { '@type': 'WebSite', name: cfg.siteName, url: abs(), inLanguage: cfg.lang },
+  ];
+  return `<meta name="description" content="${x(cfg.landingDescription)}">
+<link rel="canonical" href="${abs()}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="${x(cfg.siteName)}">
+<meta property="og:locale" content="${cfg.locale}">
+<meta property="og:title" content="${x(cfg.landingTitle)}">
+<meta property="og:description" content="${x(cfg.landingDescription)}">
+<meta property="og:url" content="${abs()}">
+<meta property="og:image" content="${abs(cfg.ogImage)}">
+<meta property="og:image:alt" content="${x(cfg.ogImageAlt)}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="alternate" type="application/rss+xml" title="${x(cfg.blogTitle)}" href="${feedUrl}">
+<script type="application/ld+json">
+${JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, null, 1).replace(/</g, '\\u003c')}
+</script>`;
+}
+
+// Markup and inline styles follow the landing's own cards (see #flavors).
+function landingPosts(posts) {
+  const cards = posts.slice(0, cfg.landingPostCount).map((p) => `<article class="glass glass-dim hover-lift" style="border-radius:32px;padding:18px">
+<a href="blog/${p.slug}/" style="display:block">
+${p.image ? `<div style="position:relative;aspect-ratio:16/10;border-radius:24px;overflow:hidden;background:#2C2E35"><img src="${p.image.src}" alt="${x(p.image.alt)}" width="${p.image.width}" height="${p.image.height}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"></div>\n` : ''}<div style="padding:18px 8px 6px">
+<div style="font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.72)">${humanDate(p.date)}</div>
+<h3 class="hd" style="font-size:22px;line-height:1.2;margin:10px 0 12px">${x(p.title)}</h3>
+<p style="margin:0;font-size:13px;color:rgba(255,246,229,.88)">${x(p.description)}</p>
+</div>
+</a>
+</article>`).join('\n');
+  return `<section id="blog" style="background:#1E1F26;padding:32px 0 112px">
+<div class="wrap">
+<div class="row-top" style="margin-bottom:56px;align-items:flex-end">
+<h2 class="hd" style="font-size:clamp(32px,5.2vw,76px);line-height:1.04">Свежее<br><span style="display:inline-block;margin-left:clamp(48px,8vw,128px)">в <span class="script" style="color:var(--accent);font-size:1.02em">блоге</span></span></h2>
+<a class="btn glass" href="blog/">Все статьи</a>
+</div>
+<div class="grid-3">
+${cards}
+</div>
+</div>
+</section>`;
+}
+
+function updateLanding(posts) {
+  const file = join(root, 'index.html');
+  const before = readFileSync(file, 'utf8');
+  const after = replaceBlock(replaceBlock(before, 'SEO', landingSeo()), 'BLOG', landingPosts(posts));
+  if (after !== before) writeFileSync(file, after);
+}
+
 const posts = loadPosts();
 posts.forEach(buildPost);
 buildIndex(posts);
 buildSitemap(posts);
 buildRobots();
 buildFeed(posts);
-console.log(`built ${posts.length} post(s), blog index, sitemap.xml, robots.txt, blog/feed.xml`);
+updateLanding(posts);
+console.log(`built ${posts.length} post(s), blog index, sitemap.xml, robots.txt, blog/feed.xml, landing blocks`);
