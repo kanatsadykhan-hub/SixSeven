@@ -204,7 +204,12 @@ function landingSeo() {
     { '@type': 'Organization', name: cfg.siteName, url: abs(), logo: abs(cfg.logo) },
     { '@type': 'WebSite', name: cfg.siteName, url: abs(), inLanguage: cfg.lang },
   ];
-  return `<meta name="description" content="${x(cfg.landingDescription)}">
+  const { google, yandex } = cfg.verification || {};
+  const verify = [
+    google && `<meta name="google-site-verification" content="${x(google)}">`,
+    yandex && `<meta name="yandex-verification" content="${x(yandex)}">`,
+  ].filter(Boolean).map((tag) => tag + '\n').join('');
+  return `${verify}<meta name="description" content="${x(cfg.landingDescription)}">
 <link rel="canonical" href="${abs()}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="${x(cfg.siteName)}">

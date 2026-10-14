@@ -16,4 +16,9 @@ export default {
   landingTitle: 'Six Seven — леденцы для партнёров',
   landingDescription: 'Леденцы на палочке Six Seven с героями мема «67»: шесть вкусов, натуральные красители и ароматизаторы, стойка на кассу. Условия для партнёров в Казахстане.',
   landingPostCount: 3,
+  // Search-engine ownership tokens, written into the landing <head>. Empty = omitted.
+  verification: {
+    google: 'KIA75sU--vEOtM4W7ePG6WSrUE8gfAEZ8_CFGKZipho',
+    yandex: '',
+  },
 };
