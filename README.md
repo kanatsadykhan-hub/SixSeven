@@ -9,7 +9,7 @@ rather than copy wholesale.
 
 ## Contents
 
-- `Main.dc.html` — the artboard (a Design Component: an `<x-dc>`
+- `index.html` — the artboard (a Design Component: an `<x-dc>`
   template + a small logic class). The values to replicate live in its
   inline `style="…"` attributes and the `<helmet><style>` block.
 - `assets/` — files uploaded to the design (images, fonts, media)
@@ -18,12 +18,14 @@ rather than copy wholesale.
 
 ## Uploaded files
 
-Images, fonts and media uploaded to the design are written once each under
-`assets/` — 6 in this export — and the exported files refer to them there. A
-reference a script puts together while the page runs (for example
-`"/_blob/" + id`) is not rewritten and does not load from this folder.
+Images, fonts and media live under `assets/`, referenced with relative
+paths. Flavor art is in `assets/flavors/`: `tiles.webp` is a 3×2 grid of
+the six product tiles (each card shows its cell via `background-position`),
+and `sheet-<flavor>.jpg` are the hero character sheets.
 
 ## Viewing
 
-Serve the folder (e.g. `python3 -m http.server`) and open `Main.dc.html`;
-some browsers block the scripts over file://.
+Live: https://kanatsadykhan-hub.github.io/SixSeven/ (GitHub Pages, `main` branch, root).
+
+Locally: serve the folder (e.g. `python -m http.server`) and open
+`index.html`; some browsers block the scripts over file://.
