@@ -29,3 +29,24 @@ Live: https://kanatsadykhan-hub.github.io/SixSeven/ (GitHub Pages, `main` branch
 
 Locally: serve the folder (e.g. `python -m http.server`) and open
 `index.html`; some browsers block the scripts over file://.
+
+## Blog
+
+Posts are Markdown files in `posts/` with front matter (`title`,
+`description`, `date`, `updated`, `slug`). A zero-dependency Node script
+turns them into static HTML that reads without JavaScript:
+
+```
+npm run build   # posts → blog/<slug>/index.html, blog/index.html,
+                # blog/feed.xml, sitemap.xml, robots.txt, landing blocks
+npm run check   # SEO + content-rule validation; exits 1 on problems
+```
+
+- `site.config.mjs` is the single place for the site URL, the `/SixSeven/`
+  base path, author name and other metadata.
+- The build rewrites only the `SEO` and `BLOG` marker blocks in
+  `index.html`; everything else there is hand-written.
+- Generated files are committed, since GitHub Pages serves the repo as-is.
+- Post rules enforced by `check.mjs`: question title and H2s, a 2–3 sentence
+  `> ` answer at the top, 800–1500 words, one landing link, one related-post
+  link, and an `## Источники` section with source links.
