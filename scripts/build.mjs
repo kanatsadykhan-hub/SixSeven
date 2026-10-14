@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import cfg from '../site.config.mjs';
-import { parseFrontMatter, renderMarkdown } from './markdown.mjs';
+import { parseFrontMatter, renderMarkdown, escapeHtml as x } from './markdown.mjs';
 import { imageSize } from './imagesize.mjs';
 import { layout, postBody, indexBody } from './templates.mjs';
 
@@ -14,6 +14,7 @@ const write = (path, content) => {
   writeFileSync(join(root, path), content);
 };
 
+const feedUrl = abs('blog/feed.xml');
 const REQUIRED = ['title', 'description', 'date', 'updated', 'slug'];
 const sizeOf = (src) => imageSize(join(root, src.replace(/^\//, '')));
 
@@ -98,6 +99,7 @@ function buildPost(post) {
     ogImage: image,
     ogImageAlt: post.image ? post.image.alt : cfg.ogImageAlt,
     graph,
+    feedUrl,
     body: postBody({ rel, cfg, post: full }),
   }));
 }
@@ -134,11 +136,65 @@ function buildIndex(posts) {
     ogImage: abs(cfg.ogImage),
     ogImageAlt: cfg.ogImageAlt,
     graph,
+    feedUrl,
     body: indexBody({ rel, cfg, posts }),
   }));
+}
+
+// Dates come from front matter (not the clock), so rebuilding is idempotent.
+const lastUpdated = (posts) => posts.map((p) => p.updated).sort().at(-1);
+const rfc822 = (iso) => new Date(iso + 'T00:00:00Z').toUTCString();
+
+function buildSitemap(posts) {
+  const urls = [
+    { loc: abs(), lastmod: lastUpdated(posts) },
+    { loc: abs('blog/'), lastmod: lastUpdated(posts) },
+    ...posts.map((p) => ({ loc: abs(`blog/${p.slug}/`), lastmod: p.updated })),
+  ];
+  write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((u) => `  <url><loc>${x(u.loc)}</loc><lastmod>${u.lastmod}</lastmod></url>`).join('\n')}
+</urlset>
+`);
+}
+
+function buildRobots() {
+  // Crawlers only read robots.txt at the host root; under a project-site basePath
+  // this file is informational until the site moves to its own domain.
+  write('robots.txt', `User-agent: *
+Allow: /
+
+Sitemap: ${abs('sitemap.xml')}
+`);
+}
+
+function buildFeed(posts) {
+  const items = posts.map((p) => `    <item>
+      <title>${x(p.title)}</title>
+      <link>${abs(`blog/${p.slug}/`)}</link>
+      <guid isPermaLink="true">${abs(`blog/${p.slug}/`)}</guid>
+      <pubDate>${rfc822(p.date)}</pubDate>
+      <description>${x(p.description)}</description>
+    </item>`).join('\n');
+  write('blog/feed.xml', `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${x(cfg.blogTitle)}</title>
+    <link>${abs('blog/')}</link>
+    <description>${x(cfg.blogDescription)}</description>
+    <language>${cfg.lang}</language>
+    <lastBuildDate>${rfc822(lastUpdated(posts))}</lastBuildDate>
+    <atom:link href="${feedUrl}" rel="self" type="application/rss+xml"/>
+${items}
+  </channel>
+</rss>
+`);
 }
 
 const posts = loadPosts();
 posts.forEach(buildPost);
 buildIndex(posts);
-console.log(`built ${posts.length} post(s) + blog index`);
+buildSitemap(posts);
+buildRobots();
+buildFeed(posts);
+console.log(`built ${posts.length} post(s), blog index, sitemap.xml, robots.txt, blog/feed.xml`);

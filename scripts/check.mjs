@@ -47,6 +47,7 @@ for (const file of pages) {
     if (!html.includes(`property="${p}"`)) fail(rel, `missing ${p}`);
   }
   if (attr(html, /property="og:url" content="([^"]+)"/) !== canonical) fail(rel, 'og:url differs from canonical');
+  if (!html.includes(`type="application/rss+xml" title="${cfg.blogTitle}" href="${siteBase}blog/feed.xml"`)) fail(rel, 'missing RSS <link rel="alternate">');
 
   const ld = attr(html, /<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
   try {
@@ -122,6 +123,17 @@ for (const f of postFiles) {
   if (words < 800 || words > 1500) fail(where, `${words} words (expected 800–1500)`);
   else console.log(`${where}: ${words} words`);
 }
+
+// ---------- sitemap, robots, feed ----------
+const read = (p) => (existsSync(join(root, p)) ? readFileSync(join(root, p), 'utf8') : (fail(p, 'missing'), ''));
+const sitemap = read('sitemap.xml');
+const feed = read('blog/feed.xml');
+const robots = read('robots.txt');
+const expected = [siteBase, ...pages.map((f) => siteBase + relative(root, f).split('\\').join('/').replace(/index\.html$/, ''))];
+for (const url of expected) if (!sitemap.includes(`<loc>${url}</loc>`)) fail('sitemap.xml', `missing ${url}`);
+if ((sitemap.match(/<url>/g) || []).length !== expected.length) fail('sitemap.xml', `expected ${expected.length} URLs`);
+for (const s of slugs) if (!feed.includes(`<link>${siteBase}blog/${s}/</link>`)) fail('blog/feed.xml', `missing item for ${s}`);
+if (!robots.includes(`Sitemap: ${siteBase}sitemap.xml`)) fail('robots.txt', 'no Sitemap line pointing at sitemap.xml');
 
 if (errors.length) {
   console.error(`\n${errors.length} problem(s):\n- ${errors.join('\n- ')}`);

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Блог Six Seven</title>
+    <link>https://kanatsadykhan-hub.github.io/SixSeven/blog/</link>
+    <description>Статьи о меме «67», импульсных покупках у кассы и леденцах Six Seven — для дистрибьюторов, сетей и точек продаж в Казахстане.</description>
+    <language>ru</language>
+    <lastBuildDate>Wed, 14 Oct 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://kanatsadykhan-hub.github.io/SixSeven/blog/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Что значит «67» и откуда взялся мем?</title>
+      <link>https://kanatsadykhan-hub.github.io/SixSeven/blog/chto-znachit-67/</link>
+      <guid isPermaLink="true">https://kanatsadykhan-hub.github.io/SixSeven/blog/chto-znachit-67/</guid>
+      <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
+      <description>«67» (six seven) — сленговое восклицание без точного смысла из трека Skrilla и баскетбольных видео. Разбираем значение, происхождение и путь мема.</description>
+    </item>
+    <item>
+      <title>Почему Dictionary.com выбрал «67» словом 2025 года?</title>
+      <link>https://kanatsadykhan-hub.github.io/SixSeven/blog/67-slovo-goda-dictionary-com/</link>
+      <guid isPermaLink="true">https://kanatsadykhan-hub.github.io/SixSeven/blog/67-slovo-goda-dictionary-com/</guid>
+      <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Dictionary.com назвал «67» словом 2025 года. Разбираем данные и аргументы словаря, шорт-лист и то, что выбрали Oxford, Cambridge, Collins и Merriam-Webster.</description>
+    </item>
+    <item>
+      <title>Как мем становится продуктом: что бренды делают с вирусными трендами?</title>
+      <link>https://kanatsadykhan-hub.github.io/SixSeven/blog/kak-mem-stanovitsya-produktom/</link>
+      <guid isPermaLink="true">https://kanatsadykhan-hub.github.io/SixSeven/blog/kak-mem-stanovitsya-produktom/</guid>
+      <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Как вирусный тренд превращается в товар: разбор «дубайского шоколада» и продуктов вокруг мема «67» — что сработало, какие были риски и что проверить закупщику.</description>
+    </item>
+    <item>
+      <title>Почему конфеты у кассы продаются и что такое импульсная покупка?</title>
+      <link>https://kanatsadykhan-hub.github.io/SixSeven/blog/pochemu-konfety-u-kassy-prodayutsya/</link>
+      <guid isPermaLink="true">https://kanatsadykhan-hub.github.io/SixSeven/blog/pochemu-konfety-u-kassy-prodayutsya/</guid>
+      <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Импульсная покупка у кассы: определение, данные исследований о сладостях в прикассовой зоне, роль детей и персонажей, а также как такую выкладку регулируют.</description>
+    </item>
+    <item>
+      <title>Six Seven: какие шесть вкусов и шесть героев в линейке?</title>
+      <link>https://kanatsadykhan-hub.github.io/SixSeven/blog/six-seven-shest-vkusov-shest-geroev/</link>
+      <guid isPermaLink="true">https://kanatsadykhan-hub.github.io/SixSeven/blog/six-seven-shest-vkusov-shest-geroev/</guid>
+      <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Леденцы Six Seven: шесть вкусов, шесть героев, формат 6 г, рекомендованная цена, POS-стойка и каналы продаж. Всё о линейке для партнёров в Казахстане.</description>
+    </item>
+  </channel>
+</rss>
