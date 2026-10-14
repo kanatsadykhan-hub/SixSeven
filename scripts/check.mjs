@@ -60,6 +60,7 @@ for (const file of pages) {
 
   for (const img of html.match(/<img\b[^>]*>/g) || []) {
     if (!/\balt="[^"]+"/.test(img)) fail(rel, `image without alt text: ${img.slice(0, 80)}`);
+    if (!/\bwidth="\d+"/.test(img) || !/\bheight="\d+"/.test(img)) fail(rel, `image without width/height: ${img.slice(0, 80)}`);
   }
 
   // Every local href/src must point at a file that exists.

@@ -49,7 +49,9 @@ h1{font-size:clamp(32px,5.4vw,64px);margin-bottom:16px}
 .post strong{color:#fff}
 .post blockquote{margin:24px 0;padding:4px 0 4px 20px;border-left:3px solid var(--accent);color:var(--ink-dim)}
 .post figure{margin:32px 0;border-radius:24px;overflow:hidden;background:var(--bg-deep)}
-.post figure img{display:block;width:100%;max-height:min(560px,70vh);object-fit:cover;object-position:50% 40%}
+.post figure img{display:block;width:100%}
+/* Tall images would fill several screens; show a banner-height crop instead. */
+.post figure img.portrait{max-height:min(560px,70vh);object-fit:cover;object-position:50% 40%}
 
 /* Glass card, as on the landing */
 .answer,.card{position:relative;background:rgba(255,255,255,.04);box-shadow:inset 0 1px 1px rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:24px}

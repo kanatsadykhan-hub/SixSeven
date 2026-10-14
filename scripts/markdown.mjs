@@ -33,9 +33,11 @@ function inline(text, resolve) {
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => slots[+i]);
 }
 
-export function renderMarkdown(body, resolve = (u) => u) {
+// size(src) may return { width, height } for a root-relative image path.
+export function renderMarkdown(body, resolve = (u) => u, size = () => null) {
   const blocks = body.replace(/\r\n/g, '\n').trim().split(/\n{2,}/);
   const out = [];
+  let images = 0;
   for (const block of blocks) {
     const lines = block.split('\n');
     const h = /^(#{2,3})\s+(.*)$/.exec(block);
@@ -44,7 +46,12 @@ export function renderMarkdown(body, resolve = (u) => u) {
       const tag = h[1].length === 2 ? 'h2' : 'h3';
       out.push(`<${tag}>${inline(h[2], resolve)}</${tag}>`);
     } else if (img) {
-      out.push(`<figure><img src="${escapeHtml(resolve(img[2]))}" alt="${escapeHtml(img[1])}" loading="lazy" decoding="async"></figure>`);
+      const dim = size(img[2]);
+      const wh = dim ? ` width="${dim.width}" height="${dim.height}"` : '';
+      const cls = dim && dim.height > dim.width ? ' class="portrait"' : '';
+      // The first image sits near the top of the post, so it loads eagerly.
+      const loading = images++ === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
+      out.push(`<figure><img src="${escapeHtml(resolve(img[2]))}" alt="${escapeHtml(img[1])}"${wh}${cls} ${loading} decoding="async"></figure>`);
     } else if (lines.every((l) => /^- /.test(l))) {
       out.push(`<ul>${lines.map((l) => `<li>${inline(l.slice(2), resolve)}</li>`).join('')}</ul>`);
     } else if (lines.every((l) => /^\d+\. /.test(l))) {

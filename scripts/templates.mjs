@@ -81,7 +81,7 @@ ${post.answerHtml ? `<div class="answer" role="note"><p class="answer-label">ÐšÐ
 
 export function indexBody({ rel, cfg, posts }) {
   const cards = posts.map((p) => `<article class="card">
-${p.image ? `<a class="card-img" href="${p.slug}/" tabindex="-1" aria-hidden="true"><img src="${rel}${p.image.src}" alt="${e(p.image.alt)}" loading="lazy" decoding="async"></a>\n` : ''}<div class="card-body">
+${p.image ? `<a class="card-img" href="${p.slug}/" tabindex="-1" aria-hidden="true"><img src="${rel}${p.image.src}" alt="${e(p.image.alt)}" width="${p.image.width}" height="${p.image.height}" loading="lazy" decoding="async"></a>\n` : ''}<div class="card-body">
 <h2><a href="${p.slug}/">${e(p.title)}</a></h2>
 <p>${e(p.description)}</p>
 <p class="post-meta"><time datetime="${p.date}">${humanDate(p.date)}</time></p>

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import cfg from '../site.config.mjs';
 import { parseFrontMatter, renderMarkdown } from './markdown.mjs';
+import { imageSize } from './imagesize.mjs';
 import { layout, postBody, indexBody } from './templates.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -14,6 +15,7 @@ const write = (path, content) => {
 };
 
 const REQUIRED = ['title', 'description', 'date', 'updated', 'slug'];
+const sizeOf = (src) => imageSize(join(root, src.replace(/^\//, '')));
 
 function loadPosts() {
   const files = readdirSync(join(root, 'posts')).filter((f) => f.endsWith('.md')).sort();
@@ -23,7 +25,7 @@ function loadPosts() {
     if (!/^[a-z0-9-]+$/.test(data.slug)) throw new Error(`${file}: slug must be lowercase latin, digits and dashes`);
     // The first image in the post doubles as its OG image and index thumbnail.
     const img = /^!\[([^\]]+)\]\(\/([^)\s]+)\)$/m.exec(body);
-    return { ...data, file, body, image: img ? { alt: img[1], src: img[2] } : null };
+    return { ...data, file, body, image: img ? { alt: img[1], src: img[2], ...sizeOf(img[2]) } : null };
   });
   const slugs = new Set();
   for (const p of posts) {
@@ -67,7 +69,7 @@ function buildPost(post) {
   const full = {
     ...post,
     answerHtml: answer ? renderMarkdown(answer.replace(/^>\s?/gm, ''), resolve) : '',
-    html: renderMarkdown(rest, resolve),
+    html: renderMarkdown(rest, resolve, sizeOf),
   };
   const graph = [
     {
