@@ -6,7 +6,7 @@ export default {
   siteName: 'Six Seven',
   lang: 'ru',
   locale: 'ru_RU',
-  author: '[AUTHOR NAME]',
+  author: 'Kanat Sadykhan',
   blogTitle: 'Блог Six Seven',
   blogDescription: 'Статьи о меме «67», импульсных покупках у кассы и леденцах Six Seven — для дистрибьюторов, сетей и точек продаж в Казахстане.',
   // Paths below are relative to the site root.
