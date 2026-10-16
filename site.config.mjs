@@ -1,8 +1,24 @@
 // Single source of truth for absolute URLs and site-wide metadata.
-// The site is a GitHub Pages project site, so everything lives under basePath.
+// Absolute URLs (canonical, OG, JSON-LD, sitemap, robots, RSS) = origin + basePath.
+// Defaults target GitHub Pages; override at build time without editing files:
+//   SITE_ORIGIN     e.g. https://six-seven.vercel.app  (no trailing slash)
+//   SITE_BASE_PATH  "/" on Vercel, "/SixSeven/" on GitHub Pages
+// On Vercel, VERCEL_PROJECT_PRODUCTION_URL is used when SITE_ORIGIN is not set.
+const GITHUB_PAGES_ORIGIN = 'https://kanatsadykhan-hub.github.io';
+const env = process.env;
+const origin = (env.SITE_ORIGIN
+  || (env.VERCEL_PROJECT_PRODUCTION_URL && `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`)
+  || GITHUB_PAGES_ORIGIN).replace(/\/+$/, '');
+const basePath = `/${env.SITE_BASE_PATH ?? 'SixSeven'}/`.replace(/\/+/g, '/');
+
+// A Vercel build must not silently fall back to the GitHub Pages address.
+if (env.VERCEL && (basePath !== '/' || origin === GITHUB_PAGES_ORIGIN)) {
+  throw new Error('Vercel build: set SITE_BASE_PATH=/ and SITE_ORIGIN (or enable System Environment Variables)');
+}
+
 export default {
-  origin: 'https://kanatsadykhan-hub.github.io',
-  basePath: '/SixSeven/',
+  origin,
+  basePath,
   siteName: 'Six Seven',
   lang: 'ru',
   locale: 'ru_RU',

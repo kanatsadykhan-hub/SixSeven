@@ -38,7 +38,7 @@ function loadPosts() {
 }
 
 // Root-relative links in Markdown ("/", "/blog/x/") become relative to the page,
-// so the output works under /SixSeven/ on Pages and at / in a local preview.
+// so the output works under any basePath (a subfolder on Pages, / on Vercel or locally).
 const resolverFor = (rel) => (url) => (url.startsWith('/') ? rel + url.slice(1) || './' : url);
 
 function splitAnswer(body) {
@@ -257,6 +257,7 @@ function updateLanding(posts) {
   if (after !== before) writeFileSync(file, after);
 }
 
+console.log(`site: ${abs()}`);
 const posts = loadPosts();
 posts.forEach(buildPost);
 buildIndex(posts);
