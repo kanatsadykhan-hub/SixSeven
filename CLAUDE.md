@@ -54,4 +54,5 @@
 ## Секреты
 
 - Если появятся ключи или токены: только в `.env.local`, он в `.gitignore`, в репозиторий не попадает.
+- Настоящие ключи — только в `.env.local` и в настройках Vercel (Environment Variables). В код и в браузерный JS их не класть.
 - Строка в этом файле «не читай .env» — не защита. Защита — `permissions.deny` в `.claude/settings.json`, который коммитится. В `.gitignore` держать только `.claude/settings.local.json`, а не всю папку `.claude/`.
