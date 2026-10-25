@@ -81,6 +81,22 @@ body{margin:0;background:#1E1F26}
 .chip{display:inline-flex;align-items:center;min-height:44px;padding:0 22px;border-radius:999px;font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.06em}
 .contact-row{display:flex;align-items:center;gap:18px;padding:18px 26px;min-height:76px;border-bottom:1px solid rgba(255,255,255,.12);transition:background .2s}
 .contact-row:hover{background:rgba(255,255,255,.08)}
+.lead{margin-top:72px;max-width:880px;border-radius:32px;padding:clamp(24px,3.2vw,44px)}
+.lead-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
+.lead-field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.lead-wide{grid-column:1/-1}
+.lead-label{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.06em}
+.lead-input{width:100%;min-height:52px;padding:14px 18px;border-radius:16px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#FFF6E5;font:inherit;font-size:15px;text-transform:none;letter-spacing:normal;transition:border-color .2s,background .2s}
+textarea.lead-input{min-height:120px;resize:vertical}
+.lead-input::placeholder{color:rgba(255,246,229,.45)}
+.lead-input:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.07)}
+.lead-consent{display:flex;gap:12px;align-items:flex-start;font-size:12px;line-height:1.5;color:rgba(255,246,229,.85);cursor:pointer}
+.lead-consent input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.lead-hp{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+.lead button.btn{border:none;cursor:pointer;margin-top:24px}
+.lead button.btn:disabled{opacity:.6;cursor:wait;transform:none}
+.lead-status{margin:16px 0 0;font-size:13px}
+.lead-error{color:#FF8A8A}
 @media (max-width:1023px){
 .nav-wrap{display:none}
 .hero-grid{grid-template-columns:1fr;gap:40px;padding-bottom:72px}
@@ -90,6 +106,7 @@ body{margin:0;background:#1E1F26}
 @media (max-width:640px){
 .fact{min-width:0;flex:1 1 120px;padding:14px 16px}
 .cta-row{align-items:stretch}
+.lead-grid{grid-template-columns:1fr}
 }
 </style>
 </helmet>
@@ -340,6 +357,45 @@ body{margin:0;background:#1E1F26}
 <div style="margin-top:40px"><a class="btn btn-accent" href="#contact">Запросить прайс и условия</a></div>
 </div>
 </div>
+
+<div id="lead" class="lead glass glass-dim">
+<h3 class="hd" style="font-size:clamp(24px,3vw,36px);margin-bottom:12px">Оставить заявку</h3>
+<p style="margin:0 0 28px;max-width:620px;font-size:13px;color:rgba(255,246,229,.85)">Коротко: кто вы и сколько у вас точек. Отправим прайс и условия под ваш канал.</p>
+<sc-if value="{{ leadShowForm }}">
+<form onsubmit="{{ onLeadSubmit }}" aria-label="Заявка на прайс и условия">
+<div class="lead-grid">
+<div class="lead-field">
+<label class="lead-label" for="lead-name">Имя</label>
+<input class="lead-input" id="lead-name" type="text" name="name" required minLength="2" maxLength="100" autoComplete="name">
+</div>
+<div class="lead-field">
+<label class="lead-label" for="lead-contact">Телефон, WhatsApp или Telegram</label>
+<input class="lead-input" id="lead-contact" type="text" name="contact" required minLength="5" maxLength="100" autoComplete="tel" placeholder="+7 7XX XXX XX XX или @username">
+</div>
+<div class="lead-field lead-wide">
+<label class="lead-label" for="lead-message">Сообщение (необязательно)</label>
+<textarea class="lead-input" id="lead-message" name="message" maxLength="1000" rows="4" placeholder="Кто вы и сколько у вас точек"></textarea>
+</div>
+<div class="lead-hp" aria-hidden="true">
+<label for="lead-website">Сайт</label>
+<input id="lead-website" type="text" name="website" tabIndex="-1" autoComplete="off">
+</div>
+<label class="lead-consent lead-wide" for="lead-consent">
+<input id="lead-consent" type="checkbox" name="consent" required>
+<span>Я согласен(а) на обработку персональных данных для ответа на заявку</span>
+</label>
+</div>
+<button class="btn btn-accent" type="submit" disabled="{{ leadSending }}">{{ leadButton }}</button>
+<div aria-live="polite">
+<sc-if value="{{ leadError }}"><p class="lead-status lead-error">Не удалось отправить заявку. Попробуйте ещё раз чуть позже.</p></sc-if>
+<sc-if value="{{ leadLimited }}"><p class="lead-status lead-error">Слишком много заявок. Попробуйте позже.</p></sc-if>
+</div>
+</form>
+</sc-if>
+<sc-if value="{{ leadSuccess }}">
+<p class="lead-status" role="status" style="font-size:15px;color:#FFF6E5">Заявка отправлена. Мы свяжемся с вами по указанному контакту.</p>
+</sc-if>
+</div>
 </div>
 </section>
 
@@ -354,11 +410,44 @@ body{margin:0;background:#1E1F26}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFD22E","options":["#FFD22E","#FF6B1A","#4DBB4A","#E62544"]},"$preview":{"width":1440,"height":7600}}'>
 class Component extends DCLogic {
+// Lead form: idle | sending | success | error | limited. The browser only knows
+// the relative endpoint; keys live in the server function's environment.
+state = { lead: 'idle' };
+submitLead = async (event) => {
+event.preventDefault();
+if (this.state.lead === 'sending') return;
+const data = new FormData(event.currentTarget);
+this.setState({ lead: 'sending' });
+let next = 'error';
+try {
+const res = await fetch('api/lead', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+name: data.get('name'),
+contact: data.get('contact'),
+message: data.get('message'),
+consent: data.get('consent') === 'on',
+website: data.get('website')
+})
+});
+next = res.ok ? 'success' : res.status === 429 ? 'limited' : 'error';
+} catch (e) {}
+this.setState({ lead: next });
+};
 renderVals() {
 // tx/ty: the flavor's cell in the 3×2 grid assets/flavors/tiles.webp
 const S = (slug) => './assets/flavors/sheet-' + slug + '.jpg';
+const lead = this.state.lead;
 return {
 accent: this.props.accent ?? '#FFD22E',
+leadShowForm: lead !== 'success',
+leadSuccess: lead === 'success',
+leadSending: lead === 'sending',
+leadError: lead === 'error',
+leadLimited: lead === 'limited',
+leadButton: lead === 'sending' ? 'Отправляем…' : 'Отправить заявку',
+onLeadSubmit: this.submitLead,
 flavors: [
 { name: 'Яблоко', tx: '0%', ty: '0%', sheet: S('apple'), c1: '#4DBB4A', c2: '#2F8F2E', ink: '#1E1F26', glow: 'rgba(77,187,74,.45)' },
 { name: 'Апельсин', tx: '50%', ty: '0%', sheet: S('orange'), c1: '#FF6B1A', c2: '#E04D00', ink: '#1E1F26', glow: 'rgba(255,107,26,.45)' },

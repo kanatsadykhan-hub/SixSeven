@@ -5,5 +5,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.3"
   }
 }
