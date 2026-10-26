@@ -75,17 +75,27 @@ const db = () =>
 
 async function saveLead(lead) {
   try {
-    const { error } = await db().from('leads').insert(lead);
+    const { error, status } = await db().from('leads').insert(lead);
     if (error) {
-      console.error(`lead: supabase insert failed (${error.code || 'unknown'})`);
+      // HTTP status 0 means the request never reached a server (DNS, network, timeout).
+      const http = Number.isInteger(status) ? status : 'unknown';
+      console.error(`lead: supabase insert failed (code: ${safeToken(error.code) || 'unknown'}, HTTP ${http})`);
       return false;
     }
     return true;
   } catch (err) {
-    console.error(`lead: supabase insert threw (${err?.name || 'Error'})`);
+    // Only the error class and the system error code (e.g. ENOTFOUND) are logged,
+    // never err.message: it can contain the project URL.
+    console.error(`lead: supabase insert threw (${safeToken(err?.name) || 'Error'}, cause: ${safeToken(err?.cause?.code) || 'none'})`);
     return false;
   }
 }
+
+// Passes through short identifier-like values only, so nothing else can leak into logs.
+const safeToken = (value) => (typeof value === 'string' && /^[A-Za-z0-9_]{1,40}$/.test(value) ? value : '');
+// Telegram's error "description", only when it is short plain text
+// (e.g. "Bad Request: chat not found"); anything else is dropped.
+const safeDescription = (value) => (typeof value === 'string' && /^[A-Za-z0-9 ,:]{1,80}$/.test(value) ? value : '');
 
 async function notifyTelegram({ name, contact, message }) {
   const text = [
@@ -102,7 +112,13 @@ async function notifyTelegram({ name, contact, message }) {
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
-      console.error(`lead: telegram responded ${res.status}`);
+      let description = '';
+      try {
+        description = safeDescription((await res.json())?.description);
+      } catch {
+        // Not JSON: keep only the status.
+      }
+      console.error(`lead: telegram responded ${res.status}${description ? ` (${description})` : ''}`);
       return false;
     }
     return true;
