@@ -61,9 +61,9 @@ Import the GitHub repo in Vercel with these settings:
 |---|---|
 | Framework Preset | Other |
 | Root Directory | `./` |
-| Build Command | `npm run build && npm run check` (Override) |
-| Output Directory | default (`.` — there is no `public/` folder) |
-| Install Command | default (no dependencies) |
+| Build Command | no override (`vercel.json` sets `npm run build && npm run check && npm run dist`) |
+| Output Directory | no override, or `dist` (`vercel.json` sets `dist`) |
+| Install Command | default |
 | Environment Variable | `SITE_BASE_PATH` = `/` (Production and Preview) |
 
 - The origin comes from Vercel's `VERCEL_PROJECT_PRODUCTION_URL`; set
@@ -71,5 +71,9 @@ Import the GitHub repo in Vercel with these settings:
   System Environment Variables must be exposed in the project settings.
 - A Vercel build fails on purpose if it would still use the GitHub Pages
   address or base path.
+- `npm run dist` copies only the served files (`index.html`, `support.js`,
+  `vendor/`, `assets/`, `blog/`, `sitemap.xml`, `robots.txt`) into `dist/`,
+  so `api/`, `scripts/`, `posts/`, `node_modules/` and config files are never
+  served as static files. The function in `api/` still deploys at `/api/lead`.
 - `vercel.json` sets `trailingSlash: true`, so `/blog/x` redirects to
   `/blog/x/` (the canonical form) instead of serving duplicate URLs.
