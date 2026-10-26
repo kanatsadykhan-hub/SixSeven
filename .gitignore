@@ -10,3 +10,4 @@ desktop.ini
 !.env.example
 node_modules/
 research/
+dist/
