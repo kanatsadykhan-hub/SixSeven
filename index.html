@@ -92,6 +92,18 @@ textarea.lead-input{min-height:120px;resize:vertical}
 .lead-input:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.07)}
 .lead-consent{display:flex;gap:12px;align-items:flex-start;font-size:12px;line-height:1.5;color:rgba(255,246,229,.85);cursor:pointer}
 .lead-consent input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.lead-group{grid-column:1/-1;min-width:0;margin:0;padding:0;border:0}
+.lead-group legend{padding:0;margin-bottom:10px}
+.lead-chips{display:flex;flex-wrap:wrap;gap:10px}
+.lead-chip{position:relative;cursor:pointer}
+.lead-chip input{position:absolute;top:0;left:0;width:1px;height:1px;margin:0;opacity:0}
+.lead-chip span{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.06em;transition:background .2s,border-color .2s,color .2s}
+.lead-chip:hover span{background:rgba(255,255,255,.1)}
+.lead-chip input:checked+span{background:var(--accent);border-color:var(--accent);color:#1E1F26}
+.lead-chip input:focus-visible+span{outline:2px solid var(--accent);outline-offset:3px}
+.lead-next{margin:20px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:16px}
+.lead-next li{display:flex;gap:18px;align-items:baseline;font-size:13px}
+.lead-next .hd{font-size:28px;line-height:1;color:var(--accent);min-width:44px}
 .lead-hp{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
 .lead button.btn{border:none;cursor:pointer;margin-top:24px}
 .lead button.btn:disabled{opacity:.6;cursor:wait;transform:none}
@@ -107,6 +119,8 @@ textarea.lead-input{min-height:120px;resize:vertical}
 .fact{min-width:0;flex:1 1 120px;padding:14px 16px}
 .cta-row{align-items:stretch}
 .lead-grid{grid-template-columns:1fr}
+.lead-chips{gap:8px}
+.lead-chip span{min-height:40px;padding:0 16px;font-size:13px}
 }
 </style>
 </helmet>
@@ -359,8 +373,8 @@ textarea.lead-input{min-height:120px;resize:vertical}
 </div>
 
 <div id="lead" class="lead glass glass-dim">
-<h3 class="hd" style="font-size:clamp(24px,3vw,36px);margin-bottom:12px">Оставить заявку</h3>
-<p style="margin:0 0 28px;max-width:620px;font-size:13px;color:rgba(255,246,229,.85)">Коротко: кто вы и сколько у вас точек. Отправим прайс и условия под ваш канал.</p>
+<h3 class="hd" style="font-size:clamp(24px,3vw,36px);margin-bottom:12px">Запросить прайс</h3>
+<p style="margin:0 0 28px;max-width:620px;font-size:13px;color:rgba(255,246,229,.85)">Отметьте, где будете продавать и сколько у вас точек: пришлём прайс и условия под ваш канал.</p>
 <sc-if value="{{ leadShowForm }}">
 <form onsubmit="{{ onLeadSubmit }}" aria-label="Заявка на прайс и условия">
 <div class="lead-grid">
@@ -372,10 +386,35 @@ textarea.lead-input{min-height:120px;resize:vertical}
 <label class="lead-label" for="lead-contact">Телефон, WhatsApp или Telegram</label>
 <input class="lead-input" id="lead-contact" type="text" name="contact" required minLength="5" maxLength="100" autoComplete="tel" placeholder="+7 7XX XXX XX XX или @username">
 </div>
+<fieldset class="lead-group">
+<legend class="lead-label">Тип точки (необязательно)</legend>
+<div class="lead-chips">
+<label class="lead-chip"><input type="radio" name="pointType" value="Аптеки"><span>Аптеки</span></label>
+<label class="lead-chip"><input type="radio" name="pointType" value="АЗС"><span>АЗС</span></label>
+<label class="lead-chip"><input type="radio" name="pointType" value="Магазины у дома"><span>Магазины у дома</span></label>
+<label class="lead-chip"><input type="radio" name="pointType" value="Минимаркеты"><span>Минимаркеты</span></label>
+<label class="lead-chip"><input type="radio" name="pointType" value="Детские пространства"><span>Детские пространства</span></label>
+<label class="lead-chip"><input type="radio" name="pointType" value="HoReCa"><span>HoReCa</span></label>
+<label class="lead-chip"><input type="radio" name="pointType" value="Дистрибьюторы"><span>Дистрибьюторы</span></label>
+</div>
+</fieldset>
+<fieldset class="lead-group">
+<legend class="lead-label">Сколько точек (необязательно)</legend>
+<div class="lead-chips">
+<label class="lead-chip"><input type="radio" name="points" value="1"><span>1</span></label>
+<label class="lead-chip"><input type="radio" name="points" value="2–5"><span>2–5</span></label>
+<label class="lead-chip"><input type="radio" name="points" value="6–20"><span>6–20</span></label>
+<label class="lead-chip"><input type="radio" name="points" value="20+"><span>20+</span></label>
+</div>
+</fieldset>
 <div class="lead-field lead-wide">
 <label class="lead-label" for="lead-message">Сообщение (необязательно)</label>
-<textarea class="lead-input" id="lead-message" name="message" maxLength="1000" rows="4" placeholder="Кто вы и сколько у вас точек"></textarea>
+<textarea class="lead-input" id="lead-message" name="message" maxLength="1000" rows="4" placeholder="Город, вкусы, вопросы"></textarea>
 </div>
+<label class="lead-consent lead-wide" for="lead-samples">
+<input id="lead-samples" type="checkbox" name="samples">
+<span>Нужны образцы</span>
+</label>
 <div class="lead-hp" aria-hidden="true">
 <label for="lead-website">Сайт</label>
 <input id="lead-website" type="text" name="website" tabIndex="-1" autoComplete="off">
@@ -393,7 +432,14 @@ textarea.lead-input{min-height:120px;resize:vertical}
 </form>
 </sc-if>
 <sc-if value="{{ leadSuccess }}">
-<p class="lead-status" role="status" style="font-size:15px;color:#FFF6E5">Заявка отправлена. Мы свяжемся с вами по указанному контакту.</p>
+<div role="status">
+<p class="hd" style="font-size:22px">Заявка у нас. Что дальше:</p>
+<ol class="lead-next">
+<li><span class="hd">01</span><span>Посмотрим тип и количество ваших точек.</span></li>
+<li><span class="hd">02</span><span>Свяжемся по контакту, который вы указали, и пришлём прайс и условия.</span></li>
+<li><span class="hd">03</span><span>Если отметили образцы — договоримся, как их передать.</span></li>
+</ol>
+</div>
 </sc-if>
 </div>
 </div>
@@ -427,6 +473,9 @@ body: JSON.stringify({
 name: data.get('name'),
 contact: data.get('contact'),
 message: data.get('message'),
+pointType: data.get('pointType'),
+points: data.get('points'),
+samples: data.get('samples') === 'on',
 consent: data.get('consent') === 'on',
 website: data.get('website')
 })
@@ -446,7 +495,7 @@ leadSuccess: lead === 'success',
 leadSending: lead === 'sending',
 leadError: lead === 'error',
 leadLimited: lead === 'limited',
-leadButton: lead === 'sending' ? 'Отправляем…' : 'Отправить заявку',
+leadButton: lead === 'sending' ? 'Отправляем…' : 'Запросить прайс',
 onLeadSubmit: this.submitLead,
 flavors: [
 { name: 'Яблоко', tx: '0%', ty: '0%', sheet: S('apple'), c1: '#4DBB4A', c2: '#2F8F2E', ink: '#1E1F26', glow: 'rgba(77,187,74,.45)' },

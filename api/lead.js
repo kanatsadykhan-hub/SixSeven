@@ -43,6 +43,15 @@ function looksLikeContact(v) {
   return TELEGRAM.test(v);
 }
 
+// Optional chips from the form. FormData.get() returns null for an unselected
+// radio, so null, undefined and '' all mean "not provided".
+const POINT_TYPES = ['Аптеки', 'АЗС', 'Магазины у дома', 'Минимаркеты', 'Детские пространства', 'HoReCa', 'Дистрибьюторы'];
+const POINT_COUNTS = ['1', '2–5', '6–20', '20+'];
+const choice = (value, allowed) => {
+  if (value === undefined || value === null || value === '') return '';
+  return allowed.includes(value) ? value : null;
+};
+
 function validate(body) {
   const errors = [];
   const str = (key) => (typeof body[key] === 'string' ? body[key] : null);
@@ -62,10 +71,27 @@ function validate(body) {
     if (message.length > LIMITS.message) errors.push('message');
   }
 
+  const pointType = choice(body.pointType, POINT_TYPES);
+  if (pointType === null) errors.push('pointType');
+  const points = choice(body.points, POINT_COUNTS);
+  if (points === null) errors.push('points');
+  if (body.samples !== undefined && body.samples !== null && typeof body.samples !== 'boolean') errors.push('samples');
+
   if (body.consent !== true) errors.push('consent');
 
-  return { errors, lead: { name, contact, message } };
+  return { errors, lead: { name, contact, message, pointType, points, samples: body.samples === true } };
 }
+
+// Labelled lines for the optional chips; only whitelisted values reach them.
+const detailLines = ({ pointType, points, samples }) =>
+  [pointType && `Тип точки: ${pointType}`, points && `Точек: ${points}`, samples && 'Образцы: нужны'].filter(Boolean);
+
+// The "leads" table has only name, contact and message, so the details go into message.
+const toRow = (lead) => ({
+  name: lead.name,
+  contact: lead.contact,
+  message: [detailLines(lead).join('\n'), lead.message].filter(Boolean).join('\n\n'),
+});
 
 let supabase;
 const db = () =>
@@ -97,12 +123,13 @@ const safeToken = (value) => (typeof value === 'string' && /^[A-Za-z0-9_]{1,40}$
 // (e.g. "Bad Request: chat not found"); anything else is dropped.
 const safeDescription = (value) => (typeof value === 'string' && /^[A-Za-z0-9 ,:]{1,80}$/.test(value) ? value : '');
 
-async function notifyTelegram({ name, contact, message }) {
+async function notifyTelegram(lead) {
   const text = [
     'Новая заявка с сайта Six Seven',
-    `Имя: ${name}`,
-    `Контакт: ${contact}`,
-    `Сообщение: ${message || '—'}`,
+    `Имя: ${lead.name}`,
+    `Контакт: ${lead.contact}`,
+    ...detailLines(lead),
+    `Сообщение: ${lead.message || '—'}`,
   ].join('\n');
   try {
     const res = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -169,7 +196,7 @@ async function handle(request) {
     return json(500, { ok: false, error: 'server_config' });
   }
 
-  const [saved, notified] = await Promise.all([saveLead(lead), notifyTelegram(lead)]);
+  const [saved, notified] = await Promise.all([saveLead(toRow(lead)), notifyTelegram(lead)]);
   if (!saved && !notified) return json(502, { ok: false, error: 'delivery_failed' });
   return json(200, { ok: true });
 }

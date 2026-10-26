@@ -13,6 +13,9 @@ const request = new Request('http://localhost/api/lead', {
     name: 'Тест',
     contact: '+7 701 000 00 00',
     message: 'Тестовая заявка',
+    pointType: 'Аптеки',
+    points: '2–5',
+    samples: true,
     consent: true,
   }),
 });
