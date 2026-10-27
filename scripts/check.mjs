@@ -148,24 +148,33 @@ for (const f of postFiles) {
   }
 }
 
-// ---------- cabinet (hand-written, private) ----------
-{
-  const where = 'cabinet/index.html';
+// ---------- cabinet and the privacy draft (hand-written, not indexed) ----------
+// The privacy page stays noindex while it is a draft for a lawyer to review.
+for (const dir of ['cabinet', 'privacy']) {
+  const where = `${dir}/index.html`;
   const html = existsSync(join(root, where)) ? readFileSync(join(root, where), 'utf8') : (fail(where, 'missing'), '');
   if (html && !html.includes('<meta name="robots" content="noindex">')) fail(where, 'missing <meta name="robots" content="noindex">');
   for (const [, url] of html.matchAll(/\b(?:href|src)="([^"]+)"/g)) {
     if (/^(https?:|mailto:|tel:|#)/.test(url)) continue;
     const clean = url.split('#')[0].split('?')[0];
-    let target = posix.normalize(posix.join('cabinet', clean));
+    let target = posix.normalize(posix.join(dir, clean));
     if (clean.endsWith('/')) target = posix.join(target, 'index.html');
     if (!existsSync(join(root, target))) fail(where, `broken local link ${url} → ${target}`);
   }
 }
 
+// ---------- every consent links to the privacy page ----------
+for (const [where, href] of [['index.html', 'privacy/'], ['cabinet/index.html', '../privacy/']]) {
+  const html = existsSync(join(root, where)) ? readFileSync(join(root, where), 'utf8') : '';
+  const consents = [...html.matchAll(/<label class="(?:lead|cab)-consent[^"]*"[^>]*for="(?:lead|auth)-consent"[^>]*>([\s\S]*?)<\/label>/g)];
+  if (!consents.length) fail(where, 'no consent checkbox found');
+  for (const [, label] of consents) if (!label.includes(`href="${href}"`)) fail(where, `consent text has no link to ${href}`);
+}
+
 // ---------- no Supabase keys in served sources ----------
 // The publishable key reaches the browser only through dist/cabinet/config.json,
 // written at deploy time; a secret key must never appear anywhere.
-for (const file of ['index.html', 'cabinet/index.html', 'cabinet/auth.js', 'cabinet/cabinet.js', ...pages.map((f) => relative(root, f))]) {
+for (const file of ['index.html', 'cabinet/index.html', 'cabinet/auth.js', 'cabinet/cabinet.js', 'privacy/index.html', ...pages.map((f) => relative(root, f))]) {
   const path = join(root, file);
   if (!existsSync(path)) continue;
   const text = readFileSync(path, 'utf8');
@@ -181,6 +190,7 @@ const expected = [siteBase, ...pages.map((f) => siteBase + relative(root, f).spl
 for (const url of expected) if (!sitemap.includes(`<loc>${url}</loc>`)) fail('sitemap.xml', `missing ${url}`);
 if ((sitemap.match(/<url>/g) || []).length !== expected.length) fail('sitemap.xml', `expected ${expected.length} URLs`);
 if (sitemap.includes('/cabinet/')) fail('sitemap.xml', 'the cabinet is private and must not be listed');
+if (sitemap.includes('/privacy/')) fail('sitemap.xml', 'the privacy page is a draft and must not be listed yet');
 for (const s of slugs) if (!feed.includes(`<link>${siteBase}blog/${s}/</link>`)) fail('blog/feed.xml', `missing item for ${s}`);
 if (!robots.includes(`Sitemap: ${siteBase}sitemap.xml`)) fail('robots.txt', 'no Sitemap line pointing at sitemap.xml');
 

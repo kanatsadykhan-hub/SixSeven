@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обработка персональных данных — Six Seven</title>
+<meta name="description" content="Черновик политики обработки персональных данных сайта Six Seven: какие данные собирает форма заявки и кабинет, кому они передаются.">
+<!-- Draft: keep noindex and out of sitemap.xml until a lawyer has reviewed it. -->
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/ad5b066d2c1a4a734994e0da8b572788.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&amp;family=Pacifico&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="../blog/blog.css">
+<style>
+/* Privacy page only; tokens, header, footer and .post typography come from blog.css. */
+.draft{margin:0 0 40px;padding:18px 22px;border:1px solid var(--accent);border-radius:16px;font-size:14px}
+.draft strong{color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.todo{color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:.92em}
+.open{padding:18px 22px;border-radius:16px;background:rgba(255,210,46,.08)}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<header class="site-header wrap">
+<a class="logo" href="../"><img src="../assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven — на главную" width="151" height="68"></a>
+<nav class="site-nav" aria-label="Основное меню">
+<a href="../blog/">Блог</a>
+<a class="btn btn-accent" href="../#lead">Запросить прайс</a>
+</nav>
+</header>
+<main class="wrap post">
+<div class="post-head">
+<h1>Обработка персональных данных</h1>
+<p class="post-meta">Версия: draft-2026-10-27 · черновик</p>
+</div>
+
+<p class="draft" role="note"><strong>Проект, требует проверки юристом.</strong> Это структура будущей политики, а не действующий документ. В квадратных скобках — данные и формулировки, которые должен заполнить оператор или юрист. Пункты в разделе «Открытые вопросы» не решены.</p>
+
+<h2>Кто обрабатывает данные</h2>
+<ul>
+<li>Оператор: <span class="todo">[полное наименование оператора]</span></li>
+<li>БИН/ИИН: <span class="todo">[БИН/ИИН]</span></li>
+<li>Адрес: <span class="todo">[юридический адрес]</span></li>
+<li>Контакт для обращений по персональным данным: <span class="todo">[e-mail или телефон]</span></li>
+</ul>
+
+<h2>Какие данные собираются</h2>
+<h3>Форма «Запросить прайс»</h3>
+<ul>
+<li>имя;</li>
+<li>контакт: телефон или имя в Telegram;</li>
+<li>по желанию: тип точки, количество точек, нужны ли образцы, сообщение;</li>
+<li>отметка о согласии, время, когда сервер принял заявку с согласием, и версия этого текста.</li>
+</ul>
+<p>Если посетитель вошёл в кабинет, заявка связывается с его аккаунтом, а e-mail аккаунта добавляется в уведомление о заявке.</p>
+<h3>Кабинет</h3>
+<ul>
+<li>e-mail и пароль для входа. Пароль браузер передаёт напрямую в сервис аутентификации Supabase, в таблицу заявок он не попадает;</li>
+<li>данные сессии хранятся в браузере посетителя (localStorage), пока он не выйдет.</li>
+</ul>
+<h3>Технические данные</h3>
+<ul>
+<li>IP-адрес используется в памяти серверной функции, чтобы ограничить частоту заявок, и в базу заявок не записывается;</li>
+<li>журналы хостинга: <span class="todo">[уточнить, что и сколько хранит Vercel]</span>.</li>
+</ul>
+
+<h2>Зачем</h2>
+<ul>
+<li>ответить на заявку на прайс;</li>
+<li>показать вошедшему пользователю его заявки в кабинете;</li>
+<li><span class="todo">[другие цели, если есть]</span>.</li>
+</ul>
+<p>Правовое основание: <span class="todo">[основание обработки, формулирует юрист]</span>.</p>
+
+<h2>Кому передаются данные</h2>
+<ul>
+<li>Supabase — база данных заявок и аутентификация кабинета. Регион хранения: <span class="todo">[регион проекта Supabase]</span>;</li>
+<li>Telegram — уведомление владельцу о новой заявке: имя, контакт, выбранные параметры, сообщение, e-mail аккаунта;</li>
+<li>Vercel — хостинг сайта и серверной функции, через которую проходит заявка;</li>
+<li>Google Fonts — шрифты страниц; браузер посетителя обращается к серверам Google;</li>
+<li><span class="todo">[другие получатели, если есть]</span>.</li>
+</ul>
+
+<h2>Сколько хранятся</h2>
+<p><span class="todo">[срок хранения заявок и аккаунтов]</span></p>
+
+<h2>Права и как ими воспользоваться</h2>
+<p><span class="todo">[права субъекта данных, порядок отзыва согласия, доступа, исправления и удаления данных, сроки ответа]</span></p>
+
+<h2>Открытые вопросы</h2>
+<div class="open">
+<ul>
+<li><strong>Регион базы.</strong> Закон РК № 94-V «О персональных данных и их защите» (ст. 12 п. 2) требует хранить персональные данные в базе на территории Республики Казахстан. Регион проекта Supabase не проверен — <span class="todo">[решение юриста]</span>.</li>
+<li><strong>Передача в Telegram.</strong> Уведомление уходит через серверы Telegram за пределами РК; трансграничную передачу регулирует ст. 16 того же закона — <span class="todo">[решение юриста]</span>.</li>
+<li><strong>Согласие в кабинете.</strong> Отметка согласия при регистрации проверяется, но пока не записывается — <span class="todo">[решить, как фиксировать]</span>.</li>
+</ul>
+</div>
+
+<h2>Изменения</h2>
+<p>При изменении текста согласия или этой страницы меняется версия вверху страницы. С каждой заявкой сохраняется версия, действовавшая в момент отправки.</p>
+</main>
+<footer class="site-footer">
+<div class="wrap footer-row">
+<img src="../assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven" width="106" height="48">
+<nav aria-label="Ссылки в подвале"><a href="../">Главная</a> · <a href="../blog/">Блог</a></nav>
+<div class="legal">ИП Аубакиров Канат Садыханулы · Алматы, Казахстан · © 2026 Six Seven</div>
+</div>
+</footer>
+</body>
+</html>

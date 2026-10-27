@@ -204,3 +204,24 @@ test('7. base security headers everywhere, a strict CSP only in the cabinet', as
   await expect.poll(() => guard.violations.some((v) => v.startsWith('CSP:'))).toBe(true);
   guard.violations = guard.violations.filter((v) => !v.startsWith('CSP:'));
 });
+
+test('8. both consents link to the privacy draft', async ({ page, request }) => {
+  const privacy = await request.get('/privacy/');
+  expect(privacy.status()).toBe(200);
+  await page.goto('/privacy/');
+  await expect(page.locator('.draft')).toContainText('Проект, требует проверки юристом');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+
+  await openCabinet(page);
+  await page.locator('#tab-up').click();
+  const cabinetLink = page.locator('#auth-consent-row a');
+  await expect(cabinetLink).toBeVisible();
+  expect(new URL(await cabinetLink.evaluate((a) => a.href)).pathname).toBe('/privacy/');
+  await expect(cabinetLink).toHaveAttribute('target', '_blank');
+
+  await page.goto('/');
+  const landingLink = page.locator('label[for="lead-consent"] a');
+  await expect(landingLink).toBeVisible();
+  expect(new URL(await landingLink.evaluate((a) => a.href)).pathname).toBe('/privacy/');
+  await expect(landingLink).toHaveAttribute('rel', 'noopener');
+});

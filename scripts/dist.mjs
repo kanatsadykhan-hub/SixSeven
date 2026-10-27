@@ -9,7 +9,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'dist');
 
 // Every page, script, style, feed and media file the pages reference lives here.
-const ALLOW = ['index.html', 'support.js', 'vendor', 'assets', 'blog', 'cabinet', 'sitemap.xml', 'robots.txt'];
+const ALLOW = ['index.html', 'support.js', 'vendor', 'assets', 'blog', 'cabinet', 'privacy', 'sitemap.xml', 'robots.txt'];
 // Browser build of supabase-js for the cabinet, at the version pinned by package-lock.json.
 const SUPABASE_BROWSER = 'node_modules/@supabase/supabase-js/dist/umd/supabase.js';
 // OS clutter that can sit in assets/ locally; never part of the site.
