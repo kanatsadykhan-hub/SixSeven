@@ -86,12 +86,20 @@ function validate(body) {
 const detailLines = ({ pointType, points, samples }) =>
   [pointType && `Тип точки: ${pointType}`, points && `Точек: ${points}`, samples && 'Образцы: нужны'].filter(Boolean);
 
-// The "leads" table has only name, contact and message, so the details go into message.
-const toRow = (lead) => ({
+// The "leads" table has name, contact and message (the details go into message),
+// plus user_id, set only for a user verified by Supabase Auth.
+const toRow = (lead, user) => ({
   name: lead.name,
   contact: lead.contact,
   message: [detailLines(lead).join('\n'), lead.message].filter(Boolean).join('\n\n'),
+  ...(user && { user_id: user.id }),
 });
+
+// A Supabase access token is a JWT: three base64url parts. It is read only from
+// the Authorization header, never from the body.
+const BEARER = /^Bearer ([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$/;
+const MAX_AUTH_HEADER = 4096;
+const bearerToken = (header) => (header.length <= MAX_AUTH_HEADER ? BEARER.exec(header)?.[1] || null : null);
 
 let supabase;
 const db = () =>
@@ -99,22 +107,56 @@ const db = () =>
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   }));
 
-async function saveLead(lead) {
+// The lead's owner comes only from Supabase Auth checking the token on its server
+// (getUser), never from the request body. Any failure means "save anonymously".
+async function verifiedUser(token) {
   try {
-    const { error, status } = await db().from('leads').insert(lead);
+    const { data, error } = await db().auth.getUser(token);
+    const user = data?.user;
+    if (error || !user?.id || user.is_anonymous) {
+      const http = Number.isInteger(error?.status) ? error.status : 'none';
+      console.error(`lead: auth token rejected (code: ${safeToken(error?.code) || 'none'}, HTTP ${http})`);
+      return null;
+    }
+    return { id: user.id, email: typeof user.email === 'string' ? cleanLine(user.email).slice(0, 254) : '' };
+  } catch (err) {
+    console.error(`lead: auth check threw (${safeToken(err?.name) || 'Error'})`);
+    return null;
+  }
+}
+
+// Returns the PostgREST error code ('' when there is none), or null on success.
+async function insertLead(row) {
+  try {
+    const { error, status } = await db().from('leads').insert(row);
     if (error) {
       // HTTP status 0 means the request never reached a server (DNS, network, timeout).
       const http = Number.isInteger(status) ? status : 'unknown';
       console.error(`lead: supabase insert failed (code: ${safeToken(error.code) || 'unknown'}, HTTP ${http})`);
-      return false;
+      return safeToken(error.code);
     }
-    return true;
+    return null;
   } catch (err) {
     // Only the error class and the system error code (e.g. ENOTFOUND) are logged,
     // never err.message: it can contain the project URL.
     console.error(`lead: supabase insert threw (${safeToken(err?.name) || 'Error'}, cause: ${safeToken(err?.cause?.code) || 'none'})`);
-    return false;
+    return '';
   }
+}
+
+// The link to the user is only rejected for these: the user was deleted (foreign
+// key) or the user_id column is not migrated yet. Then the lead is kept without it.
+const LINK_ERRORS = new Set(['23503', '42703', 'PGRST204']);
+
+// Returns 'linked' (saved with user_id), 'saved' (saved without it) or null.
+async function saveLead(row) {
+  const code = await insertLead(row);
+  if (code === null) return row.user_id ? 'linked' : 'saved';
+  if (!row.user_id || !LINK_ERRORS.has(code)) return null;
+  const { user_id: _, ...anonymous } = row;
+  if ((await insertLead(anonymous)) !== null) return null;
+  console.error('lead: saved without user_id');
+  return 'saved';
 }
 
 // Passes through short identifier-like values only, so nothing else can leak into logs.
@@ -123,12 +165,13 @@ const safeToken = (value) => (typeof value === 'string' && /^[A-Za-z0-9_]{1,40}$
 // (e.g. "Bad Request: chat not found"); anything else is dropped.
 const safeDescription = (value) => (typeof value === 'string' && /^[A-Za-z0-9 ,:]{1,80}$/.test(value) ? value : '');
 
-async function notifyTelegram(lead) {
+async function notifyTelegram(lead, user) {
   const text = [
     'Новая заявка с сайта Six Seven',
     `Имя: ${lead.name}`,
     `Контакт: ${lead.contact}`,
     ...detailLines(lead),
+    ...(user ? [`Аккаунт: ${user.email || 'есть'}`] : []),
     `Сообщение: ${lead.message || '—'}`,
   ].join('\n');
   try {
@@ -196,9 +239,19 @@ async function handle(request) {
     return json(500, { ok: false, error: 'server_config' });
   }
 
-  const [saved, notified] = await Promise.all([saveLead(toRow(lead)), notifyTelegram(lead)]);
+  // Signing in is optional: no header means an anonymous lead, as before. A header
+  // that fails the check also gives an anonymous lead, reported as linked: false.
+  const authHeader = request.headers.get('authorization');
+  let user = null;
+  if (authHeader !== null) {
+    const token = bearerToken(authHeader);
+    if (token) user = await verifiedUser(token);
+    else console.error('lead: malformed authorization header');
+  }
+
+  const [saved, notified] = await Promise.all([saveLead(toRow(lead, user)), notifyTelegram(lead, user)]);
   if (!saved && !notified) return json(502, { ok: false, error: 'delivery_failed' });
-  return json(200, { ok: true });
+  return json(200, authHeader === null ? { ok: true } : { ok: true, linked: saved === 'linked' });
 }
 
 export default {
