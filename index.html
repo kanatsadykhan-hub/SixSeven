@@ -92,6 +92,7 @@ textarea.lead-input{min-height:120px;resize:vertical}
 .lead-input:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.07)}
 .lead-consent{display:flex;gap:12px;align-items:flex-start;font-size:12px;line-height:1.5;color:rgba(255,246,229,.85);cursor:pointer}
 .lead-consent input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.lead-consent a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 .lead-group{grid-column:1/-1;min-width:0;margin:0;padding:0;border:0}
 .lead-group legend{padding:0;margin-bottom:10px}
 .lead-chips{display:flex;flex-wrap:wrap;gap:10px}
@@ -109,6 +110,8 @@ textarea.lead-input{min-height:120px;resize:vertical}
 .lead button.btn:disabled{opacity:.6;cursor:wait;transform:none}
 .lead-status{margin:16px 0 0;font-size:13px}
 .lead-error{color:#FF8A8A}
+.lead-auth{margin:24px 0 0;font-size:12px;line-height:1.5;color:rgba(255,246,229,.85);overflow-wrap:anywhere}
+.lead-auth a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 @media (max-width:1023px){
 .nav-wrap{display:none}
 .hero-grid{grid-template-columns:1fr;gap:40px;padding-bottom:72px}
@@ -421,9 +424,11 @@ textarea.lead-input{min-height:120px;resize:vertical}
 </div>
 <label class="lead-consent lead-wide" for="lead-consent">
 <input id="lead-consent" type="checkbox" name="consent" required>
-<span>Я согласен(а) на обработку персональных данных для ответа на заявку</span>
+<span>Я согласен(а) на обработку персональных данных для ответа на заявку (<a href="privacy/" target="_blank" rel="noopener">как обрабатываются данные</a>)</span>
 </label>
 </div>
+<sc-if value="{{ authSignedOut }}"><p class="lead-auth">Есть аккаунт? <a href="cabinet/">Войдите</a>, чтобы видеть свои заявки. Можно и без входа.</p></sc-if>
+<sc-if value="{{ authSignedIn }}"><p class="lead-auth">Вы вошли как {{ authEmail }}. Заявка появится в <a href="cabinet/">кабинете</a>.</p></sc-if>
 <button class="btn btn-accent" type="submit" disabled="{{ leadSending }}">{{ leadButton }}</button>
 <div aria-live="polite">
 <sc-if value="{{ leadError }}"><p class="lead-status lead-error">Не удалось отправить заявку. Попробуйте ещё раз чуть позже.</p></sc-if>
@@ -439,6 +444,8 @@ textarea.lead-input{min-height:120px;resize:vertical}
 <li><span class="hd">02</span><span>Свяжемся по контакту, который вы указали, и пришлём прайс и условия.</span></li>
 <li><span class="hd">03</span><span>Если отметили образцы — договоримся, как их передать.</span></li>
 </ol>
+<sc-if value="{{ leadLinked }}"><p class="lead-auth">Заявка уже в <a href="cabinet/">кабинете</a>.</p></sc-if>
+<sc-if value="{{ leadUnlinked }}"><p class="lead-auth">Заявка принята, но не привязана к кабинету: <a href="cabinet/">войдите заново</a>, чтобы следующие заявки были там.</p></sc-if>
 </div>
 </sc-if>
 </div>
@@ -458,17 +465,39 @@ textarea.lead-input{min-height:120px;resize:vertical}
 class Component extends DCLogic {
 // Lead form: idle | sending | success | error | limited. The browser only knows
 // the relative endpoint; keys live in the server function's environment.
-state = { lead: 'idle' };
+// Sign-in is optional: cabinet/auth.js loads only when this browser already
+// holds a Supabase session, and then the request carries its access token.
+state = { lead: 'idle', authEmail: '', linked: null };
+componentDidMount() {
+let stored = false;
+try { stored = Object.keys(localStorage).some((key) => /^sb-.+-auth-token$/.test(key)); } catch (e) {}
+if (!stored) return;
+this.authClient = import(new URL('cabinet/auth.js', document.baseURI).href).then((m) => m.getClient()).catch(() => null);
+this.session().then((session) => session && this.setState({ authEmail: session.user.email || 'аккаунт' }));
+}
+session = async () => {
+try {
+const client = this.authClient ? await this.authClient : null;
+return client ? (await client.auth.getSession()).data.session : null;
+} catch (e) {
+return null;
+}
+};
 submitLead = async (event) => {
 event.preventDefault();
 if (this.state.lead === 'sending') return;
 const data = new FormData(event.currentTarget);
 this.setState({ lead: 'sending' });
 let next = 'error';
+let linked = null;
 try {
+const headers = { 'Content-Type': 'application/json' };
+// getSession() refreshes an expired token; no session means an anonymous lead.
+const session = await this.session();
+if (session) headers.Authorization = 'Bearer ' + session.access_token;
 const res = await fetch('api/lead', {
 method: 'POST',
-headers: { 'Content-Type': 'application/json' },
+headers,
 body: JSON.stringify({
 name: data.get('name'),
 contact: data.get('contact'),
@@ -481,8 +510,9 @@ website: data.get('website')
 })
 });
 next = res.ok ? 'success' : res.status === 429 ? 'limited' : 'error';
+if (res.ok && session) linked = (await res.json().catch(() => ({}))).linked === true;
 } catch (e) {}
-this.setState({ lead: next });
+this.setState({ lead: next, linked });
 };
 renderVals() {
 // tx/ty: the flavor's cell in the 3×2 grid assets/flavors/tiles.webp
@@ -496,6 +526,11 @@ leadSending: lead === 'sending',
 leadError: lead === 'error',
 leadLimited: lead === 'limited',
 leadButton: lead === 'sending' ? 'Отправляем…' : 'Запросить прайс',
+leadLinked: this.state.linked === true,
+leadUnlinked: this.state.linked === false,
+authSignedIn: !!this.state.authEmail,
+authSignedOut: !this.state.authEmail,
+authEmail: this.state.authEmail,
 onLeadSubmit: this.submitLead,
 flavors: [
 { name: 'Яблоко', tx: '0%', ty: '0%', sheet: S('apple'), c1: '#4DBB4A', c2: '#2F8F2E', ink: '#1E1F26', glow: 'rgba(77,187,74,.45)' },

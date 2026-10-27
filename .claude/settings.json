@@ -6,7 +6,9 @@
       "Read(.env.*.local)",
       "Read(.env.production)",
       "Read(.env.development)",
-      "Read(.env.staging)"
+      "Read(.env.staging)",
+      "Bash(*.env*)",
+      "PowerShell(*.env*)"
     ]
   }
 }

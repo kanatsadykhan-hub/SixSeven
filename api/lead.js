@@ -29,11 +29,14 @@ function retryAfterSeconds(ip, now = Date.now()) {
   return 0;
 }
 
+// Bidirectional controls can make text read differently from what it is
+// (e.g. reversing part of a phone number); no field needs them.
+const BIDI = /[؜‎‏‪-‮⁦-⁩]/g;
 // Single-line fields: control characters and runs of whitespace become one space.
-const cleanLine = (v) => v.replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
+const cleanLine = (v) => v.replace(BIDI, '').replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
 // The message keeps line breaks but drops other control characters.
 const cleanText = (v) =>
-  v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  v.replace(BIDI, '').replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, '').replace(/\n{3,}/g, '\n\n').trim();
 
 const PHONE = /^\+?[\d\s().-]{7,25}$/;
 // Telegram needs an explicit "@name" or "t.me/name" so plain words aren't accepted.
@@ -86,12 +89,27 @@ function validate(body) {
 const detailLines = ({ pointType, points, samples }) =>
   [pointType && `Тип точки: ${pointType}`, points && `Точек: ${points}`, samples && 'Образцы: нужны'].filter(Boolean);
 
-// The "leads" table has only name, contact and message, so the details go into message.
-const toRow = (lead) => ({
+// Which consent text the visitor agreed to. Change it together with the consent
+// wording on the landing and the version shown on /privacy/.
+const CONSENT_VERSION = 'draft-2026-10-27';
+
+// The "leads" table has name, contact and message (the details go into message),
+// when and to which version consent was given (validate() requires it, the time
+// is the server's), plus user_id, set only for a user verified by Supabase Auth.
+const toRow = (lead, user, now = new Date()) => ({
   name: lead.name,
   contact: lead.contact,
   message: [detailLines(lead).join('\n'), lead.message].filter(Boolean).join('\n\n'),
+  consent_at: now.toISOString(),
+  consent_version: CONSENT_VERSION,
+  ...(user && { user_id: user.id }),
 });
+
+// A Supabase access token is a JWT: three base64url parts. It is read only from
+// the Authorization header, never from the body.
+const BEARER = /^Bearer ([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$/;
+const MAX_AUTH_HEADER = 4096;
+const bearerToken = (header) => (header.length <= MAX_AUTH_HEADER ? BEARER.exec(header)?.[1] || null : null);
 
 let supabase;
 const db = () =>
@@ -99,22 +117,67 @@ const db = () =>
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   }));
 
-async function saveLead(lead) {
+// The lead's owner comes only from Supabase Auth checking the token on its server
+// (getUser), never from the request body. Any failure means "save anonymously".
+async function verifiedUser(token) {
   try {
-    const { error, status } = await db().from('leads').insert(lead);
+    const { data, error } = await db().auth.getUser(token);
+    const user = data?.user;
+    if (error || !user?.id || user.is_anonymous) {
+      const http = Number.isInteger(error?.status) ? error.status : 'none';
+      console.error(`lead: auth token rejected (code: ${safeToken(error?.code) || 'none'}, HTTP ${http})`);
+      return null;
+    }
+    return { id: user.id, email: typeof user.email === 'string' ? cleanLine(user.email).slice(0, 254) : '' };
+  } catch (err) {
+    console.error(`lead: auth check threw (${safeToken(err?.name) || 'Error'})`);
+    return null;
+  }
+}
+
+// Returns the PostgREST error code ('' when there is none), or null on success.
+async function insertLead(row) {
+  try {
+    const { error, status } = await db().from('leads').insert(row);
     if (error) {
       // HTTP status 0 means the request never reached a server (DNS, network, timeout).
       const http = Number.isInteger(status) ? status : 'unknown';
       console.error(`lead: supabase insert failed (code: ${safeToken(error.code) || 'unknown'}, HTTP ${http})`);
-      return false;
+      return safeToken(error.code);
     }
-    return true;
+    return null;
   } catch (err) {
     // Only the error class and the system error code (e.g. ENOTFOUND) are logged,
     // never err.message: it can contain the project URL.
     console.error(`lead: supabase insert threw (${safeToken(err?.name) || 'Error'}, cause: ${safeToken(err?.cause?.code) || 'none'})`);
-    return false;
+    return '';
   }
+}
+
+// A lead is never lost to a missing optional column, in two steps at most:
+// 1. an unknown column (consent migration not run yet: 42703, PGRST204) → again
+//    without the consent columns, still with user_id;
+// 2. the user was deleted (foreign key, 23503) → again without user_id.
+// Any other error, or the same one again, gives up.
+const MISSING_COLUMN = new Set(['42703', 'PGRST204']);
+const CONSENT_COLUMNS = ['consent_at', 'consent_version'];
+const without = (row, keys) => Object.fromEntries(Object.entries(row).filter(([key]) => !keys.includes(key)));
+
+// Returns 'linked' (saved with user_id), 'saved' (saved without it) or null.
+async function saveLead(row) {
+  let code = await insertLead(row);
+  if (code !== null && MISSING_COLUMN.has(code) && 'consent_at' in row) {
+    row = without(row, CONSENT_COLUMNS);
+    code = await insertLead(row);
+    if (code === null) console.error('lead: saved without consent columns');
+  }
+  if (code === '23503' && row.user_id) {
+    row = without(row, ['user_id']);
+    code = await insertLead(row);
+    if (code === null) console.error('lead: saved without user_id');
+  }
+  if (code !== null) return null;
+  return row.user_id ? 'linked' : 'saved';
 }
 
 // Passes through short identifier-like values only, so nothing else can leak into logs.
@@ -123,19 +186,35 @@ const safeToken = (value) => (typeof value === 'string' && /^[A-Za-z0-9_]{1,40}$
 // (e.g. "Bad Request: chat not found"); anything else is dropped.
 const safeDescription = (value) => (typeof value === 'string' && /^[A-Za-z0-9 ,:]{1,80}$/.test(value) ? value : '');
 
-async function notifyTelegram(lead) {
-  const text = [
-    'Новая заявка с сайта Six Seven',
-    `Имя: ${lead.name}`,
-    `Контакт: ${lead.contact}`,
-    ...detailLines(lead),
-    `Сообщение: ${lead.message || '—'}`,
+// Telegram HTML mode: these three characters are all that must be escaped.
+const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Our own lines come first; the visitor's message goes last, inside a quote, so a
+// line typed into it (say, a fake "Аккаунт: …") can't pass for one of ours.
+function telegramText(lead, user) {
+  const line = (label, value) => `<b>${label}:</b> ${escapeHtml(value)}`;
+  return [
+    '<b>Новая заявка с сайта Six Seven</b>',
+    line('Имя', lead.name),
+    line('Контакт', lead.contact),
+    ...detailLines(lead).map(escapeHtml),
+    ...(user ? [line('Аккаунт', user.email || 'есть')] : []),
+    '<b>Сообщение:</b>',
+    `<blockquote>${escapeHtml(lead.message || '—')}</blockquote>`,
   ].join('\n');
+}
+
+async function notifyTelegram(lead, user) {
   try {
     const res = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text, disable_web_page_preview: true }),
+      body: JSON.stringify({
+        chat_id: process.env.TELEGRAM_CHAT_ID,
+        text: telegramText(lead, user),
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      }),
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
@@ -156,11 +235,33 @@ async function notifyTelegram(lead) {
   }
 }
 
+// Browsers say where a request comes from; another site's page must not be able
+// to post leads through its visitors. Clients that send neither header (curl,
+// scripts) are let through: they can fake the headers anyway, the rate limit
+// and validation still apply to them.
+function crossSite(request) {
+  const site = request.headers.get('sec-fetch-site');
+  if (site !== null && site !== 'same-origin') return true;
+  const origin = request.headers.get('origin');
+  if (origin === null) return false;
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  try {
+    return new URL(origin).host !== host;
+  } catch {
+    return true; // "null" or garbage
+  }
+}
+
+// The media type itself, without parameters: "text/plain;x=application/json" is
+// a simple request a foreign page can send without a CORS preflight.
+const mediaType = (header) => (header || '').split(';')[0].trim().toLowerCase();
+
 async function handle(request) {
   if (request.method !== 'POST') {
     return json(405, { ok: false, error: 'method_not_allowed' }, { Allow: 'POST' });
   }
-  if (!(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
+  if (crossSite(request)) return json(403, { ok: false, error: 'forbidden_origin' });
+  if (mediaType(request.headers.get('content-type')) !== 'application/json') {
     return json(415, { ok: false, error: 'unsupported_media_type' });
   }
   if (Number(request.headers.get('content-length') || 0) > MAX_BODY_BYTES) {
@@ -196,9 +297,19 @@ async function handle(request) {
     return json(500, { ok: false, error: 'server_config' });
   }
 
-  const [saved, notified] = await Promise.all([saveLead(toRow(lead)), notifyTelegram(lead)]);
+  // Signing in is optional: no header means an anonymous lead, as before. A header
+  // that fails the check also gives an anonymous lead, reported as linked: false.
+  const authHeader = request.headers.get('authorization');
+  let user = null;
+  if (authHeader !== null) {
+    const token = bearerToken(authHeader);
+    if (token) user = await verifiedUser(token);
+    else console.error('lead: malformed authorization header');
+  }
+
+  const [saved, notified] = await Promise.all([saveLead(toRow(lead, user)), notifyTelegram(lead, user)]);
   if (!saved && !notified) return json(502, { ok: false, error: 'delivery_failed' });
-  return json(200, { ok: true });
+  return json(200, authHeader === null ? { ok: true } : { ok: true, linked: saved === 'linked' });
 }
 
 export default {

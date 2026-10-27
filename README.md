@@ -65,6 +65,7 @@ Import the GitHub repo in Vercel with these settings:
 | Output Directory | no override, or `dist` (`vercel.json` sets `dist`) |
 | Install Command | default |
 | Environment Variable | `SITE_BASE_PATH` = `/` (Production and Preview) |
+| Environment Variable | `SUPABASE_PUBLISHABLE_KEY` (optional, turns on sign-in; Production and Preview) |
 
 - The origin comes from Vercel's `VERCEL_PROJECT_PRODUCTION_URL`; set
   `SITE_ORIGIN` (e.g. `https://example.com`) to pin a custom domain.
@@ -72,8 +73,79 @@ Import the GitHub repo in Vercel with these settings:
 - A Vercel build fails on purpose if it would still use the GitHub Pages
   address or base path.
 - `npm run dist` copies only the served files (`index.html`, `support.js`,
-  `vendor/`, `assets/`, `blog/`, `sitemap.xml`, `robots.txt`) into `dist/`,
+  `vendor/`, `assets/`, `blog/`, `cabinet/`, `privacy/`, `sitemap.xml`, `robots.txt`) into `dist/`,
   so `api/`, `scripts/`, `posts/`, `node_modules/` and config files are never
   served as static files. The function in `api/` still deploys at `/api/lead`.
 - `vercel.json` sets `trailingSlash: true`, so `/blog/x` redirects to
   `/blog/x/` (the canonical form) instead of serving duplicate URLs.
+- `vercel.json` also sends security headers on every page (`nosniff`,
+  `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`) and a
+  strict `Content-Security-Policy` on `/cabinet/` only. The landing has no
+  CSP: its runtime compiles the template with `new Function`.
+- `api/lead.js` refuses requests from other sites (`Origin` or
+  `Sec-Fetch-Site`) and accepts only `Content-Type: application/json`.
+
+## Privacy page (draft)
+
+`/privacy/` is a draft structure for the personal-data policy, marked
+«Проект, требует проверки юристом». Operator details, legal basis,
+retention and rights are `[placeholders]`; the database region and the
+Telegram notification are open questions. It stays `noindex` and out of
+the sitemap until reviewed. Both consent checkboxes link to it.
+
+Each lead stores `consent_at` (server time) and `consent_version`
+(`CONSENT_VERSION` in `api/lead.js`). When the consent wording or the page
+changes, change both versions together.
+
+## Optional sign-in and the cabinet
+
+`/cabinet/` lets a buyer sign in with e-mail and password (Supabase Auth)
+and see their own price requests. The lead form works without signing in.
+
+- The browser gets only the publishable key. `npm run dist` writes
+  `dist/cabinet/config.json` from `SUPABASE_URL` and
+  `SUPABASE_PUBLISHABLE_KEY`, and copies the supabase-js browser build to
+  `dist/cabinet/supabase.js`; neither is in git. Without the key, sign-in
+  is off and the cabinet says so. The build fails if the key is not an
+  `sb_publishable_…` key or if any served file holds a secret.
+- A signed-in request sends the access token in the `Authorization`
+  header. `api/lead.js` checks it with `auth.getUser` and stores `user_id`;
+  any `user_id` in the body is ignored. A bad token still saves the lead,
+  without `user_id`.
+- The cabinet reads `leads` with the user's session; the RLS policy in
+  `supabase/migrations/` returns only the user's own rows.
+
+Setup, in this order:
+
+1. Run the inspection queries at the top of the migration, then the
+   migration itself, in the Supabase SQL editor.
+2. Supabase → Authentication: enable the Email provider and «Confirm
+   email»; under URL Configuration set the Site URL to the production
+   domain and add `https://<domain>/cabinet/` and the Vercel Preview URLs
+   to Redirect URLs. Custom SMTP is recommended: the built-in mail sender
+   is rate-limited.
+3. Supabase → API Keys: copy the publishable key into the Vercel variable
+   `SUPABASE_PUBLISHABLE_KEY`.
+4. Before deploying the consent change, run
+   `supabase/migrations/20261027120000_leads_consent.sql`. Without it,
+   leads are still saved, just without `consent_at` and `consent_version`.
+
+## Tests
+
+`npm run test:api` runs `tests/lead.test.mjs`: the `api/lead.js` handler
+with fake env values and a stubbed `fetch`, so nothing leaves the machine.
+
+`npx playwright test` builds the site (`build`, `check`, `dist`), serves
+`dist/` on `http://127.0.0.1:8079` with the `vercel.json` headers and runs
+`tests/cabinet.spec.mjs` against the Supabase project from `.env.local`.
+A Content Security Policy report in the browser fails the test.
+
+- `.env.local` needs `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and two
+  confirmed test accounts: `TEST_A_EMAIL`, `TEST_A_PASSWORD`,
+  `TEST_B_EMAIL`, `TEST_B_PASSWORD`. Account A must have at least one lead
+  sent while signed in; B none.
+- The tests never send leads or write to tables: requests to `/api/`,
+  sign-up and any Supabase write are blocked, and only our server and
+  Supabase are reachable. Signing out ends all of that account's sessions.
+- Failed tests leave a screenshot, with e-mails and lead text masked, in
+  `test-results/` (not committed).

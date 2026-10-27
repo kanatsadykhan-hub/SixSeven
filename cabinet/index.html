@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кабинет — Six Seven</title>
+<meta name="description" content="Вход для партнёров Six Seven: ваши заявки на прайс в одном месте.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/ad5b066d2c1a4a734994e0da8b572788.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&amp;family=Pacifico&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="../blog/blog.css">
+<style>
+/* Cabinet only; tokens, header, footer and buttons come from blog.css. */
+.cab{max-width:720px}
+.cab-card{padding:clamp(22px,3.2vw,40px);margin-top:8px}
+.cab-intro{color:var(--ink-dim);margin:0 0 28px;max-width:620px;font-size:15px}
+.cab-tabs{display:flex;gap:8px;margin-bottom:24px}
+.cab-tab{min-height:44px;padding:0 20px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:var(--ink);font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.cab-tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.cab-tab:focus-visible,.cab-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.cab-form{display:flex;flex-direction:column;gap:18px}
+.cab-field{display:flex;flex-direction:column;gap:8px}
+.cab-label{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.cab-input{width:100%;min-height:52px;padding:14px 18px;border-radius:16px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:var(--ink);font:inherit;font-size:15px;transition:border-color .2s,background .2s}
+.cab-input:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.07)}
+.cab-hint{font-size:12px;color:var(--ink-dim)}
+.cab-consent{display:flex;gap:12px;align-items:flex-start;font-size:12px;line-height:1.5;color:var(--ink-dim);cursor:pointer}
+.cab-consent input{flex:none;width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.cab button.btn{border:none;cursor:pointer;align-self:flex-start}
+.cab button.btn:disabled{opacity:.6;cursor:wait;transform:none}
+.cab-status{margin:0;font-size:14px;min-height:1.7em}
+.cab-error{color:#FF8A8A}
+.cab-link{color:var(--accent);text-underline-offset:3px}
+.cab-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;margin-bottom:32px}
+.cab-bar p{margin:0;font-size:14px;color:var(--ink-dim);overflow-wrap:anywhere}
+.cab-out{min-height:44px;padding:0 20px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:transparent;color:var(--ink);font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.cab-out:hover{background:rgba(255,255,255,.08)}
+.cab h2{font-size:clamp(24px,3.2vw,34px);margin-bottom:20px}
+.cab-leads{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.cab-lead{padding:20px 24px}
+.cab-date{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+.cab-who{margin:0 0 8px;font-size:14px;overflow-wrap:anywhere}
+.cab-msg{margin:0;font-size:14px;color:var(--ink-dim);white-space:pre-wrap;overflow-wrap:anywhere}
+[hidden]{display:none !important}
+@media (max-width:640px){
+.cab-lead{padding:18px}
+.cab button.btn{align-self:stretch}
+}
+</style>
+<script type="module" src="./cabinet.js"></script>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<header class="site-header wrap">
+<a class="logo" href="../"><img src="../assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven — на главную" width="151" height="68"></a>
+<nav class="site-nav" aria-label="Основное меню">
+<a href="../blog/">Блог</a>
+<a class="btn btn-accent" href="../#lead">Запросить прайс</a>
+</nav>
+</header>
+<main class="wrap cab">
+<h1>Кабинет</h1>
+
+<section id="cab-loading" aria-live="polite"><p class="cab-intro">Загружаем…</p></section>
+
+<section id="cab-off" hidden>
+<p class="cab-intro">Вход сейчас недоступен. Заявку на прайс можно отправить и без входа: <a class="cab-link" href="../#lead">перейти к форме</a>.</p>
+</section>
+
+<section id="cab-signed-out" hidden>
+<p class="cab-intro">Войдите, чтобы видеть свои заявки. Вход необязателен: заявку можно отправить и без него.</p>
+<div class="card cab-card">
+<div class="cab-tabs" role="tablist" aria-label="Вход или регистрация">
+<button class="cab-tab" type="button" role="tab" id="tab-in" aria-selected="true" aria-controls="auth-form">Вход</button>
+<button class="cab-tab" type="button" role="tab" id="tab-up" aria-selected="false" aria-controls="auth-form">Регистрация</button>
+</div>
+<form class="cab-form" id="auth-form" role="tabpanel" aria-labelledby="tab-in" novalidate>
+<div class="cab-field">
+<label class="cab-label" for="auth-email">E-mail</label>
+<input class="cab-input" id="auth-email" name="email" type="email" required maxlength="254" autocomplete="email">
+</div>
+<div class="cab-field">
+<label class="cab-label" for="auth-password">Пароль</label>
+<input class="cab-input" id="auth-password" name="password" type="password" required minlength="8" maxlength="72" autocomplete="current-password">
+<span class="cab-hint" id="auth-password-hint" hidden>Минимум 8 символов.</span>
+</div>
+<label class="cab-consent" id="auth-consent-row" for="auth-consent" hidden>
+<input id="auth-consent" name="consent" type="checkbox">
+<span>Я согласен(а) на обработку персональных данных для работы кабинета (<a class="cab-link" href="../privacy/" target="_blank" rel="noopener">как обрабатываются данные</a>)</span>
+</label>
+<button class="btn btn-accent" type="submit" id="auth-submit">Войти</button>
+<p class="cab-status" id="auth-status" aria-live="polite"></p>
+</form>
+</div>
+</section>
+
+<section id="cab-check-email" hidden>
+<div class="card cab-card" role="status">
+<p class="cab-intro" style="margin:0">Проверьте почту <span id="check-email-address"></span>: в письме ссылка для подтверждения адреса. После подтверждения войдите здесь.</p>
+</div>
+</section>
+
+<section id="cab-signed-in" hidden>
+<div class="cab-bar">
+<p>Вы вошли как <span id="me-email"></span></p>
+<button class="cab-out" type="button" id="sign-out">Выйти</button>
+</div>
+<h2>Мои заявки</h2>
+<p class="cab-status" id="leads-status" aria-live="polite"></p>
+<p class="cab-intro" id="leads-empty" hidden>Заявок пока нет. <a class="cab-link" href="../#lead">Запросить прайс</a></p>
+<ul class="cab-leads" id="leads"></ul>
+</section>
+</main>
+<footer class="site-footer">
+<div class="wrap footer-row">
+<img src="../assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven" width="106" height="48">
+<nav aria-label="Ссылки в подвале"><a href="../">Главная</a> · <a href="../blog/">Блог</a></nav>
+<div class="legal">ИП Аубакиров Канат Садыханулы · Алматы, Казахстан · © 2026 Six Seven</div>
+</div>
+</footer>
+</body>
+</html>
