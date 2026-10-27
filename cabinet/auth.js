@@ -6,17 +6,9 @@
 const here = new URL('./', import.meta.url);
 let pending;
 
+// The landing imports this only when localStorage already holds a Supabase
+// session (sb-<ref>-auth-token), so anonymous visitors load none of it.
 export const getClient = () => (pending ??= load());
-
-// True when this browser already holds a Supabase session. Reads one key list
-// and loads nothing, so anonymous visitors of the landing pay no extra requests.
-export function hasStoredSession() {
-  try {
-    return Object.keys(localStorage).some((key) => /^sb-.+-auth-token$/.test(key));
-  } catch {
-    return false;
-  }
-}
 
 async function load() {
   try {
