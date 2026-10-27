@@ -6,6 +6,7 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs",
     "dist": "node scripts/dist.mjs",
+    "test:api": "node --test tests/lead.test.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
