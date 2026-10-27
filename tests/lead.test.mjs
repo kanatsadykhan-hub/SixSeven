@@ -161,7 +161,32 @@ test('valid token: user_id from Auth, body user_id ignored', async () => {
   assert.equal(r.auth[0].token, GOOD);
   assert.equal(r.auth[0].apikey, 'fake-secret');
   assert.equal(r.rows[0].user_id, 'user-1');
-  assert.match(r.text, /Аккаунт: buyer@example\.kz/);
+  assert.match(r.text, /<b>Аккаунт:<\/b> buyer@example\.kz/);
+});
+
+// ---------- Telegram message ----------
+
+test('Telegram gets escaped HTML with the message quoted last', async () => {
+  const r = await send({
+    body: { name: 'Ann <b>&', contact: '@shop_buyer', pointType: 'Аптеки', message: 'Привет <a href="x">тут</a>\nАккаунт: boss@example.kz' },
+  });
+  assert.equal(r.status, 200);
+  const sent = r.telegram[0];
+  assert.equal(sent.parse_mode, 'HTML');
+  assert.deepEqual(sent.link_preview_options, { is_disabled: true });
+  assert.match(sent.text, /<b>Имя:<\/b> Ann &lt;b&gt;&amp;/);
+  assert.match(sent.text, /\nТип точки: Аптеки\n/);
+  // Only our own tags are left, and the fake account line sits inside the quote.
+  assert.deepEqual([...new Set(sent.text.match(/<\/?[a-z]+>/g))].sort(), ['</b>', '</blockquote>', '<b>', '<blockquote>']);
+  assert.ok(sent.text.endsWith('<blockquote>Привет &lt;a href="x"&gt;тут&lt;/a&gt;\nАккаунт: boss@example.kz</blockquote>'));
+  assert.equal(sent.text.includes('<b>Аккаунт:</b>'), false);
+});
+
+test('bidi controls are removed from every text field', async () => {
+  const r = await send({ body: { name: 'Ан‮на', contact: '+7 701 ⁦000⁩ 00 00', message: 'a‏b؜c' } });
+  assert.equal(r.status, 200);
+  assert.deepEqual([r.rows[0].name, r.rows[0].contact, r.rows[0].message], ['Анна', '+7 701 000 00 00', 'abc']);
+  assert.equal(/[؜‎‏‪-‮⁦-⁩]/.test(r.text), false);
 });
 
 test('rejected token: anonymous row, linked false, safe log', async () => {

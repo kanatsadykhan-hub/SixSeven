@@ -29,11 +29,14 @@ function retryAfterSeconds(ip, now = Date.now()) {
   return 0;
 }
 
+// Bidirectional controls can make text read differently from what it is
+// (e.g. reversing part of a phone number); no field needs them.
+const BIDI = /[؜‎‏‪-‮⁦-⁩]/g;
 // Single-line fields: control characters and runs of whitespace become one space.
-const cleanLine = (v) => v.replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
+const cleanLine = (v) => v.replace(BIDI, '').replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
 // The message keeps line breaks but drops other control characters.
 const cleanText = (v) =>
-  v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  v.replace(BIDI, '').replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, '').replace(/\n{3,}/g, '\n\n').trim();
 
 const PHONE = /^\+?[\d\s().-]{7,25}$/;
 // Telegram needs an explicit "@name" or "t.me/name" so plain words aren't accepted.
@@ -165,20 +168,35 @@ const safeToken = (value) => (typeof value === 'string' && /^[A-Za-z0-9_]{1,40}$
 // (e.g. "Bad Request: chat not found"); anything else is dropped.
 const safeDescription = (value) => (typeof value === 'string' && /^[A-Za-z0-9 ,:]{1,80}$/.test(value) ? value : '');
 
-async function notifyTelegram(lead, user) {
-  const text = [
-    'Новая заявка с сайта Six Seven',
-    `Имя: ${lead.name}`,
-    `Контакт: ${lead.contact}`,
-    ...detailLines(lead),
-    ...(user ? [`Аккаунт: ${user.email || 'есть'}`] : []),
-    `Сообщение: ${lead.message || '—'}`,
+// Telegram HTML mode: these three characters are all that must be escaped.
+const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Our own lines come first; the visitor's message goes last, inside a quote, so a
+// line typed into it (say, a fake "Аккаунт: …") can't pass for one of ours.
+function telegramText(lead, user) {
+  const line = (label, value) => `<b>${label}:</b> ${escapeHtml(value)}`;
+  return [
+    '<b>Новая заявка с сайта Six Seven</b>',
+    line('Имя', lead.name),
+    line('Контакт', lead.contact),
+    ...detailLines(lead).map(escapeHtml),
+    ...(user ? [line('Аккаунт', user.email || 'есть')] : []),
+    '<b>Сообщение:</b>',
+    `<blockquote>${escapeHtml(lead.message || '—')}</blockquote>`,
   ].join('\n');
+}
+
+async function notifyTelegram(lead, user) {
   try {
     const res = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text, disable_web_page_preview: true }),
+      body: JSON.stringify({
+        chat_id: process.env.TELEGRAM_CHAT_ID,
+        text: telegramText(lead, user),
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      }),
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
