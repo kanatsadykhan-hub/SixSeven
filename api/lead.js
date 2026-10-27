@@ -89,12 +89,19 @@ function validate(body) {
 const detailLines = ({ pointType, points, samples }) =>
   [pointType && `Тип точки: ${pointType}`, points && `Точек: ${points}`, samples && 'Образцы: нужны'].filter(Boolean);
 
+// Which consent text the visitor agreed to. Change it together with the consent
+// wording on the landing and the version shown on /privacy/.
+const CONSENT_VERSION = 'draft-2026-10-27';
+
 // The "leads" table has name, contact and message (the details go into message),
-// plus user_id, set only for a user verified by Supabase Auth.
-const toRow = (lead, user) => ({
+// when and to which version consent was given (validate() requires it, the time
+// is the server's), plus user_id, set only for a user verified by Supabase Auth.
+const toRow = (lead, user, now = new Date()) => ({
   name: lead.name,
   contact: lead.contact,
   message: [detailLines(lead).join('\n'), lead.message].filter(Boolean).join('\n\n'),
+  consent_at: now.toISOString(),
+  consent_version: CONSENT_VERSION,
   ...(user && { user_id: user.id }),
 });
 
@@ -147,19 +154,30 @@ async function insertLead(row) {
   }
 }
 
-// The link to the user is only rejected for these: the user was deleted (foreign
-// key) or the user_id column is not migrated yet. Then the lead is kept without it.
-const LINK_ERRORS = new Set(['23503', '42703', 'PGRST204']);
+// A lead is never lost to a missing optional column, in two steps at most:
+// 1. an unknown column (consent migration not run yet: 42703, PGRST204) → again
+//    without the consent columns, still with user_id;
+// 2. the user was deleted (foreign key, 23503) → again without user_id.
+// Any other error, or the same one again, gives up.
+const MISSING_COLUMN = new Set(['42703', 'PGRST204']);
+const CONSENT_COLUMNS = ['consent_at', 'consent_version'];
+const without = (row, keys) => Object.fromEntries(Object.entries(row).filter(([key]) => !keys.includes(key)));
 
 // Returns 'linked' (saved with user_id), 'saved' (saved without it) or null.
 async function saveLead(row) {
-  const code = await insertLead(row);
-  if (code === null) return row.user_id ? 'linked' : 'saved';
-  if (!row.user_id || !LINK_ERRORS.has(code)) return null;
-  const { user_id: _, ...anonymous } = row;
-  if ((await insertLead(anonymous)) !== null) return null;
-  console.error('lead: saved without user_id');
-  return 'saved';
+  let code = await insertLead(row);
+  if (code !== null && MISSING_COLUMN.has(code) && 'consent_at' in row) {
+    row = without(row, CONSENT_COLUMNS);
+    code = await insertLead(row);
+    if (code === null) console.error('lead: saved without consent columns');
+  }
+  if (code === '23503' && row.user_id) {
+    row = without(row, ['user_id']);
+    code = await insertLead(row);
+    if (code === null) console.error('lead: saved without user_id');
+  }
+  if (code !== null) return null;
+  return row.user_id ? 'linked' : 'saved';
 }
 
 // Passes through short identifier-like values only, so nothing else can leak into logs.

@@ -27,8 +27,11 @@ globalThis.fetch = async (input, init = {}) => {
   if (url.pathname === '/rest/v1/leads') {
     const row = JSON.parse(body);
     log.rows.push(row);
-    if (insertMode === 'fk' && row.user_id) return Response.json({ code: '23503', message: 'fk' }, { status: 409 });
-    if (insertMode === 'col' && row.user_id) return Response.json({ code: 'PGRST204', message: 'no column' }, { status: 400 });
+    // fk: the user no longer exists; col: the consent columns are not migrated;
+    // nocol: PostgREST rejects every column change (no retry may loop).
+    if (/col/.test(insertMode) && 'consent_at' in row) return Response.json({ code: 'PGRST204', message: 'no column' }, { status: 400 });
+    if (insertMode === 'nocol') return Response.json({ code: 'PGRST204', message: 'no column' }, { status: 400 });
+    if (/fk/.test(insertMode) && row.user_id) return Response.json({ code: '23503', message: 'fk' }, { status: 409 });
     if (insertMode === 'down') return Response.json({ code: 'XX000', message: 'boom' }, { status: 500 });
     return new Response(null, { status: 201 });
   }
@@ -149,7 +152,7 @@ test('no header: anonymous row, old response shape, no Auth call', async () => {
   assert.equal(r.auth.length, 0);
   assert.equal(r.rows.length, 1);
   assert.equal('user_id' in r.rows[0], false);
-  assert.deepEqual(Object.keys(r.rows[0]).sort(), ['contact', 'message', 'name']);
+  assert.deepEqual(Object.keys(r.rows[0]).sort(), ['consent_at', 'consent_version', 'contact', 'message', 'name']);
   assert.equal(r.text.includes('Аккаунт'), false);
 });
 
@@ -218,19 +221,58 @@ test('malformed header: no Auth call, anonymous, linked false', async () => {
   }
 });
 
-test('user deleted (FK 23503): retried without user_id', async () => {
+// ---------- consent record and the save cascade ----------
+
+test('every row records when and to which version consent was given', async () => {
+  const before = Date.now();
+  const r = await send({ body: { consent_at: '2000-01-01T00:00:00Z', consent_version: 'forged' } });
+  assert.equal(r.status, 200);
+  const { consent_at, consent_version } = r.rows[0];
+  assert.equal(consent_version, 'draft-2026-10-27');
+  const at = Date.parse(consent_at);
+  assert.ok(at >= before - 1000 && at <= Date.now() + 1000, 'server time, not the body');
+});
+
+test('user deleted (FK 23503): retried without user_id, consent kept', async () => {
   const r = await send({ auth: `Bearer ${GOOD}`, mode: 'fk' });
   assert.deepEqual([r.status, r.json], [200, { ok: true, linked: false }]);
   assert.equal(r.rows.length, 2);
   assert.equal(r.rows[0].user_id, 'user-1');
   assert.equal('user_id' in r.rows[1], false);
+  assert.equal(r.rows[1].consent_version, 'draft-2026-10-27');
   assert.ok(r.errors.includes('lead: saved without user_id'));
 });
 
-test('column not migrated (PGRST204): retried without user_id', async () => {
+test('consent columns not migrated (PGRST204): retried without them, user_id kept', async () => {
   const r = await send({ auth: `Bearer ${GOOD}`, mode: 'col' });
-  assert.deepEqual(r.json, { ok: true, linked: false });
+  assert.deepEqual([r.status, r.json], [200, { ok: true, linked: true }]);
   assert.equal(r.rows.length, 2);
+  assert.equal(r.rows[1].user_id, 'user-1');
+  assert.equal('consent_at' in r.rows[1] || 'consent_version' in r.rows[1], false);
+  assert.ok(r.errors.includes('lead: saved without consent columns'));
+});
+
+test('anonymous lead, consent columns not migrated: saved without them', async () => {
+  const r = await send({ mode: 'col' });
+  assert.deepEqual([r.status, r.json], [200, { ok: true }]);
+  assert.equal(r.rows.length, 2);
+  assert.deepEqual(Object.keys(r.rows[1]).sort(), ['contact', 'message', 'name']);
+});
+
+test('both steps: no consent columns, then a deleted user', async () => {
+  const r = await send({ auth: `Bearer ${GOOD}`, mode: 'col+fk' });
+  assert.deepEqual([r.status, r.json], [200, { ok: true, linked: false }]);
+  assert.equal(r.rows.length, 3);
+  assert.equal(r.rows[1].user_id, 'user-1');
+  assert.deepEqual(Object.keys(r.rows[2]).sort(), ['contact', 'message', 'name']);
+  assert.ok(r.errors.includes('lead: saved without user_id'));
+});
+
+test('user_id is dropped only on a foreign key error, and no step repeats', async () => {
+  const r = await send({ auth: `Bearer ${GOOD}`, mode: 'nocol' });
+  assert.deepEqual([r.status, r.json], [200, { ok: true, linked: false }]); // Telegram still delivered
+  assert.equal(r.rows.length, 2);
+  assert.ok(r.rows.every((row) => row.user_id === 'user-1'));
 });
 
 test('other insert error: no retry, Telegram still delivers', async () => {
