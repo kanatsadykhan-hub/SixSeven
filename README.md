@@ -73,11 +73,29 @@ Import the GitHub repo in Vercel with these settings:
 - A Vercel build fails on purpose if it would still use the GitHub Pages
   address or base path.
 - `npm run dist` copies only the served files (`index.html`, `support.js`,
-  `vendor/`, `assets/`, `blog/`, `cabinet/`, `sitemap.xml`, `robots.txt`) into `dist/`,
+  `vendor/`, `assets/`, `blog/`, `cabinet/`, `privacy/`, `sitemap.xml`, `robots.txt`) into `dist/`,
   so `api/`, `scripts/`, `posts/`, `node_modules/` and config files are never
   served as static files. The function in `api/` still deploys at `/api/lead`.
 - `vercel.json` sets `trailingSlash: true`, so `/blog/x` redirects to
   `/blog/x/` (the canonical form) instead of serving duplicate URLs.
+- `vercel.json` also sends security headers on every page (`nosniff`,
+  `Referrer-Policy`, `X-Frame-Options: DENY`, `Permissions-Policy`) and a
+  strict `Content-Security-Policy` on `/cabinet/` only. The landing has no
+  CSP: its runtime compiles the template with `new Function`.
+- `api/lead.js` refuses requests from other sites (`Origin` or
+  `Sec-Fetch-Site`) and accepts only `Content-Type: application/json`.
+
+## Privacy page (draft)
+
+`/privacy/` is a draft structure for the personal-data policy, marked
+«Проект, требует проверки юристом». Operator details, legal basis,
+retention and rights are `[placeholders]`; the database region and the
+Telegram notification are open questions. It stays `noindex` and out of
+the sitemap until reviewed. Both consent checkboxes link to it.
+
+Each lead stores `consent_at` (server time) and `consent_version`
+(`CONSENT_VERSION` in `api/lead.js`). When the consent wording or the page
+changes, change both versions together.
 
 ## Optional sign-in and the cabinet
 
@@ -108,12 +126,19 @@ Setup, in this order:
    is rate-limited.
 3. Supabase → API Keys: copy the publishable key into the Vercel variable
    `SUPABASE_PUBLISHABLE_KEY`.
+4. Before deploying the consent change, run
+   `supabase/migrations/20261027120000_leads_consent.sql`. Without it,
+   leads are still saved, just without `consent_at` and `consent_version`.
 
-## Cabinet tests
+## Tests
+
+`npm run test:api` runs `tests/lead.test.mjs`: the `api/lead.js` handler
+with fake env values and a stubbed `fetch`, so nothing leaves the machine.
 
 `npx playwright test` builds the site (`build`, `check`, `dist`), serves
-`dist/` on `http://127.0.0.1:8079` and runs `tests/cabinet.spec.mjs`
-against the Supabase project from `.env.local`.
+`dist/` on `http://127.0.0.1:8079` with the `vercel.json` headers and runs
+`tests/cabinet.spec.mjs` against the Supabase project from `.env.local`.
+A Content Security Policy report in the browser fails the test.
 
 - `.env.local` needs `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and two
   confirmed test accounts: `TEST_A_EMAIL`, `TEST_A_PASSWORD`,
