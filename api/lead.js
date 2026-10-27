@@ -199,11 +199,33 @@ async function notifyTelegram(lead, user) {
   }
 }
 
+// Browsers say where a request comes from; another site's page must not be able
+// to post leads through its visitors. Clients that send neither header (curl,
+// scripts) are let through: they can fake the headers anyway, the rate limit
+// and validation still apply to them.
+function crossSite(request) {
+  const site = request.headers.get('sec-fetch-site');
+  if (site !== null && site !== 'same-origin') return true;
+  const origin = request.headers.get('origin');
+  if (origin === null) return false;
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  try {
+    return new URL(origin).host !== host;
+  } catch {
+    return true; // "null" or garbage
+  }
+}
+
+// The media type itself, without parameters: "text/plain;x=application/json" is
+// a simple request a foreign page can send without a CORS preflight.
+const mediaType = (header) => (header || '').split(';')[0].trim().toLowerCase();
+
 async function handle(request) {
   if (request.method !== 'POST') {
     return json(405, { ok: false, error: 'method_not_allowed' }, { Allow: 'POST' });
   }
-  if (!(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
+  if (crossSite(request)) return json(403, { ok: false, error: 'forbidden_origin' });
+  if (mediaType(request.headers.get('content-type')) !== 'application/json') {
     return json(415, { ok: false, error: 'unsupported_media_type' });
   }
   if (Number(request.headers.get('content-length') || 0) > MAX_BODY_BYTES) {

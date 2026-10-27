@@ -94,6 +94,52 @@ test('invalid fields are rejected with their names', async () => {
   }
 });
 
+// ---------- where the request comes from ----------
+
+test('content type must be exactly application/json', async () => {
+  for (const type of ['text/plain;x=application/json', 'text/plain; charset=application/json', 'application/jsonx', 'text/plain']) {
+    const r = await send({ headers: { 'content-type': type } });
+    assert.equal(r.status, 415, type);
+    assert.equal(r.rows.length, 0);
+  }
+  for (const type of ['application/json; charset=utf-8', 'Application/JSON']) {
+    assert.equal((await send({ headers: { 'content-type': type } })).status, 200, type);
+  }
+});
+
+test('cross-site requests are refused before anything else', async () => {
+  const host = { host: 'six-seven.example' };
+  const refused = [
+    { ...host, origin: 'https://evil.example' },
+    { ...host, origin: 'https://six-seven.example.evil.example' },
+    { ...host, origin: 'null' },
+    { ...host, 'sec-fetch-site': 'cross-site' },
+    { ...host, 'sec-fetch-site': 'same-site' },
+    { ...host, origin: 'https://six-seven.example', 'sec-fetch-site': 'cross-site' },
+    { 'x-forwarded-host': 'six-seven.example', host: 'internal', origin: 'https://internal' },
+  ];
+  for (const headers of refused) {
+    const r = await send({ headers, auth: `Bearer ${GOOD}` });
+    assert.equal(r.status, 403, JSON.stringify(headers));
+    assert.deepEqual(r.json, { ok: false, error: 'forbidden_origin' });
+    assert.equal(r.rows.length + r.auth.length + r.telegram.length, 0);
+  }
+  // Refused requests don't use up the sender's rate limit.
+  for (let i = 0; i < 6; i++) await send({ sameIp: '10.8.8.8', headers: { ...host, origin: 'https://evil.example' } });
+  assert.equal((await send({ sameIp: '10.8.8.8' })).status, 200);
+});
+
+test('same-origin browser requests and header-less clients pass', async () => {
+  const allowed = [
+    { host: 'six-seven.example', origin: 'https://six-seven.example', 'sec-fetch-site': 'same-origin' },
+    { host: 'localhost:3000', origin: 'http://localhost:3000' },
+    { 'x-forwarded-host': 'six-seven.example', host: 'internal', origin: 'https://six-seven.example' },
+    { 'sec-fetch-site': 'same-origin' },
+    {},
+  ];
+  for (const headers of allowed) assert.equal((await send({ headers })).status, 200, JSON.stringify(headers));
+});
+
 // ---------- optional sign-in ----------
 
 test('no header: anonymous row, old response shape, no Auth call', async () => {
