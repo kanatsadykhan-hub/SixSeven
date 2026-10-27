@@ -24,9 +24,13 @@ const ALLOWED = [
 const test = base.extend({
   // Every page goes through this: our server and Supabase only, everything else
   // (fonts) is aborted. Violations are recorded as method + path, never a query.
+  // A Content Security Policy report in the console counts as a violation too.
   guard: [
     async ({ context }, use) => {
       const guard = { violations: [], supabase: [] };
+      context.on('console', (message) => {
+        if (/Content Security Policy/i.test(message.text())) guard.violations.push(`CSP: ${message.text().slice(0, 160)}`);
+      });
       await context.route('**/*', (route) => {
         const request = route.request();
         const url = new URL(request.url());
@@ -171,4 +175,32 @@ test('6. the REST API returns no leads to the publishable key without sign-in', 
   } else {
     expect([401, 403, 404], `HTTP ${status} is not a "no access" answer`).toContain(status);
   }
+});
+
+test('7. base security headers everywhere, a strict CSP only in the cabinet', async ({ page, request, guard }) => {
+  const cabinet = await request.get('/cabinet/');
+  const landing = await request.get('/');
+  for (const res of [cabinet, landing]) {
+    expect(res.headers()['x-content-type-options']).toBe('nosniff');
+    expect(res.headers()['x-frame-options']).toBe('DENY');
+    expect(res.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
+  }
+  const csp = cabinet.headers()['content-security-policy'] || '';
+  for (const part of ["default-src 'none'", "script-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "base-uri 'none'"]) {
+    expect(csp).toContain(part);
+  }
+  expect(landing.headers()['content-security-policy'], 'the landing has no CSP').toBeUndefined();
+
+  // The browser enforces it: an injected inline script does not run, and the
+  // guard sees the report (proof that tests 1–5 would catch a CSP violation).
+  await openCabinet(page);
+  const ran = await page.evaluate(() => {
+    const script = document.createElement('script');
+    script.textContent = 'window.__inlineRan = true';
+    document.head.append(script);
+    return window.__inlineRan === true;
+  });
+  expect(ran, 'inline script blocked by CSP').toBe(false);
+  await expect.poll(() => guard.violations.some((v) => v.startsWith('CSP:'))).toBe(true);
+  guard.violations = guard.violations.filter((v) => !v.startsWith('CSP:'));
 });

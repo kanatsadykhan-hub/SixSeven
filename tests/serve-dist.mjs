@@ -1,7 +1,8 @@
 // Playwright web server: builds the site the way Vercel does, then serves dist/
-// on 127.0.0.1 only. No access log, so nothing from the requests ends up in the output.
+// on 127.0.0.1 only, with the response headers from vercel.json. No access log,
+// so nothing from the requests ends up in the output.
 import { execSync } from 'node:child_process';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,12 +21,23 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.woff2': 'font/woff2',
 };
 
+// vercel.json "headers": only sources of the form "/<prefix>(.*)" are used here;
+// anything else stops the server, so a new rule can't silently go untested.
+const RULES = (JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8')).headers || []).map(({ source, headers }) => {
+  const m = /^(\/[^():*?+]*)\(\.\*\)$/.exec(source);
+  if (!m) throw new Error(`serve-dist: unsupported vercel.json header source ${source}`);
+  return { prefix: m[1], headers };
+});
+
 createServer((req, res) => {
   let path;
   try {
     path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   } catch {
     return res.writeHead(400).end();
+  }
+  for (const rule of RULES) {
+    if (path.startsWith(rule.prefix)) for (const { key, value } of rule.headers) res.setHeader(key, value);
   }
   const file = normalize(join(dist, path));
   if (file !== dist && !file.startsWith(dist + sep)) return res.writeHead(404).end();
