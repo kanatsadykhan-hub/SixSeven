@@ -108,3 +108,19 @@ Setup, in this order:
    is rate-limited.
 3. Supabase → API Keys: copy the publishable key into the Vercel variable
    `SUPABASE_PUBLISHABLE_KEY`.
+
+## Cabinet tests
+
+`npx playwright test` builds the site (`build`, `check`, `dist`), serves
+`dist/` on `http://127.0.0.1:8079` and runs `tests/cabinet.spec.mjs`
+against the Supabase project from `.env.local`.
+
+- `.env.local` needs `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and two
+  confirmed test accounts: `TEST_A_EMAIL`, `TEST_A_PASSWORD`,
+  `TEST_B_EMAIL`, `TEST_B_PASSWORD`. Account A must have at least one lead
+  sent while signed in; B none.
+- The tests never send leads or write to tables: requests to `/api/`,
+  sign-up and any Supabase write are blocked, and only our server and
+  Supabase are reachable. Signing out ends all of that account's sessions.
+- Failed tests leave a screenshot, with e-mails and lead text masked, in
+  `test-results/` (not committed).
