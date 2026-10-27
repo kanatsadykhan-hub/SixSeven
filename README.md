@@ -65,6 +65,7 @@ Import the GitHub repo in Vercel with these settings:
 | Output Directory | no override, or `dist` (`vercel.json` sets `dist`) |
 | Install Command | default |
 | Environment Variable | `SITE_BASE_PATH` = `/` (Production and Preview) |
+| Environment Variable | `SUPABASE_PUBLISHABLE_KEY` (optional, turns on sign-in; Production and Preview) |
 
 - The origin comes from Vercel's `VERCEL_PROJECT_PRODUCTION_URL`; set
   `SITE_ORIGIN` (e.g. `https://example.com`) to pin a custom domain.
@@ -72,8 +73,38 @@ Import the GitHub repo in Vercel with these settings:
 - A Vercel build fails on purpose if it would still use the GitHub Pages
   address or base path.
 - `npm run dist` copies only the served files (`index.html`, `support.js`,
-  `vendor/`, `assets/`, `blog/`, `sitemap.xml`, `robots.txt`) into `dist/`,
+  `vendor/`, `assets/`, `blog/`, `cabinet/`, `sitemap.xml`, `robots.txt`) into `dist/`,
   so `api/`, `scripts/`, `posts/`, `node_modules/` and config files are never
   served as static files. The function in `api/` still deploys at `/api/lead`.
 - `vercel.json` sets `trailingSlash: true`, so `/blog/x` redirects to
   `/blog/x/` (the canonical form) instead of serving duplicate URLs.
+
+## Optional sign-in and the cabinet
+
+`/cabinet/` lets a buyer sign in with e-mail and password (Supabase Auth)
+and see their own price requests. The lead form works without signing in.
+
+- The browser gets only the publishable key. `npm run dist` writes
+  `dist/cabinet/config.json` from `SUPABASE_URL` and
+  `SUPABASE_PUBLISHABLE_KEY`, and copies the supabase-js browser build to
+  `dist/cabinet/supabase.js`; neither is in git. Without the key, sign-in
+  is off and the cabinet says so. The build fails if the key is not an
+  `sb_publishable_…` key or if any served file holds a secret.
+- A signed-in request sends the access token in the `Authorization`
+  header. `api/lead.js` checks it with `auth.getUser` and stores `user_id`;
+  any `user_id` in the body is ignored. A bad token still saves the lead,
+  without `user_id`.
+- The cabinet reads `leads` with the user's session; the RLS policy in
+  `supabase/migrations/` returns only the user's own rows.
+
+Setup, in this order:
+
+1. Run the inspection queries at the top of the migration, then the
+   migration itself, in the Supabase SQL editor.
+2. Supabase → Authentication: enable the Email provider and «Confirm
+   email»; under URL Configuration set the Site URL to the production
+   domain and add `https://<domain>/cabinet/` and the Vercel Preview URLs
+   to Redirect URLs. Custom SMTP is recommended: the built-in mail sender
+   is rate-limited.
+3. Supabase → API Keys: copy the publishable key into the Vercel variable
+   `SUPABASE_PUBLISHABLE_KEY`.

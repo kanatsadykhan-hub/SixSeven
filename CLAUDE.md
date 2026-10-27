@@ -12,6 +12,8 @@
 - `posts/` — исходники статей блога.
 - `blog/` — готовые HTML-страницы блога (`blog/index.html`, `blog/<slug>/index.html`) и RSS `blog/feed.xml`. Генерируются скриптом, руками не править: правки вносить в `posts/` или в скрипт и пересобирать. Исключение — `blog/blog.css`: стили блога, правятся руками.
 - `scripts/` — сборка блога `build.mjs` (вспомогательные `markdown.mjs`, `templates.mjs`, `imagesize.mjs`) и проверка `check.mjs`, а также `dist.mjs`: копирует в `dist/` только файлы сайта для Vercel. Команды запуска смотреть в `package.json` (`npm run build`, `npm run check`, `npm run dist`), не придумывать.
+- `cabinet/` — кабинет (`/cabinet/`): необязательный вход по e-mail и паролю через Supabase Auth и список своих заявок. Страница пишется руками, `noindex`, в sitemap не попадает. В браузер идёт только publishable key: `config.json` и `supabase.js` кладёт в `dist/cabinet/` скрипт `dist.mjs`, в git их нет. Секретный ключ — только в `api/lead.js`.
+- `supabase/migrations/` — SQL для Supabase (колонка `user_id`, RLS). Запускается руками в SQL editor, сборка его не выполняет.
 - `site.config.mjs` — адрес сайта (`origin`) и базовый путь (`basePath`), а также метаданные сайта: название, автор, описания, OG-картинка, теги подтверждения поисковиков. Менять только здесь, не размазывать по файлам.
 - `sitemap.xml`, `robots.txt` — обновляются сборкой.
 - `dist/` — папка, которую раздаёт Vercel (`outputDirectory` в `vercel.json`). Генерируется `npm run dist`, в git не попадает, руками не править.
