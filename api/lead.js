@@ -1,13 +1,14 @@
 // Lead form endpoint: Vercel Function (Node.js runtime, Web-standard handler).
-// Secrets come only from environment variables; they are never returned or logged.
-import { createClient } from '@supabase/supabase-js';
+// Telegram-only: a valid lead is delivered to the owner's Telegram and is NOT
+// stored anywhere. Secrets come only from environment variables; they are never
+// returned or logged.
 
 const LIMITS = { name: 100, contact: 100, message: 1000 };
 const MIN = { name: 2, contact: 5 };
 const MAX_BODY_BYTES = 10 * 1024;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_MAX = 5;
-const REQUIRED_ENV = ['SUPABASE_URL', 'SUPABASE_SECRET_KEY', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'];
+const REQUIRED_ENV = ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'];
 
 const json = (status, body, headers = {}) =>
   Response.json(body, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
@@ -46,8 +47,7 @@ function looksLikeContact(v) {
   return TELEGRAM.test(v);
 }
 
-// Optional chips from the form. FormData.get() returns null for an unselected
-// radio, so null, undefined and '' all mean "not provided".
+// Optional chips from the form.
 const POINT_TYPES = ['Аптеки', 'АЗС', 'Магазины у дома', 'Минимаркеты', 'Детские пространства', 'HoReCa', 'Дистрибьюторы'];
 const POINT_COUNTS = ['1', '2–5', '6–20', '20+'];
 const choice = (value, allowed) => {
@@ -89,97 +89,6 @@ function validate(body) {
 const detailLines = ({ pointType, points, samples }) =>
   [pointType && `Тип точки: ${pointType}`, points && `Точек: ${points}`, samples && 'Образцы: нужны'].filter(Boolean);
 
-// Which consent text the visitor agreed to. Change it together with the consent
-// wording on the landing and the version shown on /privacy/.
-const CONSENT_VERSION = 'draft-2026-10-27';
-
-// The "leads" table has name, contact and message (the details go into message),
-// when and to which version consent was given (validate() requires it, the time
-// is the server's), plus user_id, set only for a user verified by Supabase Auth.
-const toRow = (lead, user, now = new Date()) => ({
-  name: lead.name,
-  contact: lead.contact,
-  message: [detailLines(lead).join('\n'), lead.message].filter(Boolean).join('\n\n'),
-  consent_at: now.toISOString(),
-  consent_version: CONSENT_VERSION,
-  ...(user && { user_id: user.id }),
-});
-
-// A Supabase access token is a JWT: three base64url parts. It is read only from
-// the Authorization header, never from the body.
-const BEARER = /^Bearer ([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$/;
-const MAX_AUTH_HEADER = 4096;
-const bearerToken = (header) => (header.length <= MAX_AUTH_HEADER ? BEARER.exec(header)?.[1] || null : null);
-
-let supabase;
-const db = () =>
-  (supabase ??= createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  }));
-
-// The lead's owner comes only from Supabase Auth checking the token on its server
-// (getUser), never from the request body. Any failure means "save anonymously".
-async function verifiedUser(token) {
-  try {
-    const { data, error } = await db().auth.getUser(token);
-    const user = data?.user;
-    if (error || !user?.id || user.is_anonymous) {
-      const http = Number.isInteger(error?.status) ? error.status : 'none';
-      console.error(`lead: auth token rejected (code: ${safeToken(error?.code) || 'none'}, HTTP ${http})`);
-      return null;
-    }
-    return { id: user.id, email: typeof user.email === 'string' ? cleanLine(user.email).slice(0, 254) : '' };
-  } catch (err) {
-    console.error(`lead: auth check threw (${safeToken(err?.name) || 'Error'})`);
-    return null;
-  }
-}
-
-// Returns the PostgREST error code ('' when there is none), or null on success.
-async function insertLead(row) {
-  try {
-    const { error, status } = await db().from('leads').insert(row);
-    if (error) {
-      // HTTP status 0 means the request never reached a server (DNS, network, timeout).
-      const http = Number.isInteger(status) ? status : 'unknown';
-      console.error(`lead: supabase insert failed (code: ${safeToken(error.code) || 'unknown'}, HTTP ${http})`);
-      return safeToken(error.code);
-    }
-    return null;
-  } catch (err) {
-    // Only the error class and the system error code (e.g. ENOTFOUND) are logged,
-    // never err.message: it can contain the project URL.
-    console.error(`lead: supabase insert threw (${safeToken(err?.name) || 'Error'}, cause: ${safeToken(err?.cause?.code) || 'none'})`);
-    return '';
-  }
-}
-
-// A lead is never lost to a missing optional column, in two steps at most:
-// 1. an unknown column (consent migration not run yet: 42703, PGRST204) → again
-//    without the consent columns, still with user_id;
-// 2. the user was deleted (foreign key, 23503) → again without user_id.
-// Any other error, or the same one again, gives up.
-const MISSING_COLUMN = new Set(['42703', 'PGRST204']);
-const CONSENT_COLUMNS = ['consent_at', 'consent_version'];
-const without = (row, keys) => Object.fromEntries(Object.entries(row).filter(([key]) => !keys.includes(key)));
-
-// Returns 'linked' (saved with user_id), 'saved' (saved without it) or null.
-async function saveLead(row) {
-  let code = await insertLead(row);
-  if (code !== null && MISSING_COLUMN.has(code) && 'consent_at' in row) {
-    row = without(row, CONSENT_COLUMNS);
-    code = await insertLead(row);
-    if (code === null) console.error('lead: saved without consent columns');
-  }
-  if (code === '23503' && row.user_id) {
-    row = without(row, ['user_id']);
-    code = await insertLead(row);
-    if (code === null) console.error('lead: saved without user_id');
-  }
-  if (code !== null) return null;
-  return row.user_id ? 'linked' : 'saved';
-}
-
 // Passes through short identifier-like values only, so nothing else can leak into logs.
 const safeToken = (value) => (typeof value === 'string' && /^[A-Za-z0-9_]{1,40}$/.test(value) ? value : '');
 // Telegram's error "description", only when it is short plain text
@@ -191,27 +100,26 @@ const escapeHtml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
 
 // Our own lines come first; the visitor's message goes last, inside a quote, so a
 // line typed into it (say, a fake "Аккаунт: …") can't pass for one of ours.
-function telegramText(lead, user) {
+function telegramText(lead) {
   const line = (label, value) => `<b>${label}:</b> ${escapeHtml(value)}`;
   return [
     '<b>Новая заявка с сайта Six Seven</b>',
     line('Имя', lead.name),
     line('Контакт', lead.contact),
     ...detailLines(lead).map(escapeHtml),
-    ...(user ? [line('Аккаунт', user.email || 'есть')] : []),
     '<b>Сообщение:</b>',
     `<blockquote>${escapeHtml(lead.message || '—')}</blockquote>`,
   ].join('\n');
 }
 
-async function notifyTelegram(lead, user) {
+async function notifyTelegram(lead) {
   try {
     const res = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: process.env.TELEGRAM_CHAT_ID,
-        text: telegramText(lead, user),
+        text: telegramText(lead),
         parse_mode: 'HTML',
         link_preview_options: { is_disabled: true },
       }),
@@ -230,7 +138,7 @@ async function notifyTelegram(lead, user) {
     return true;
   } catch (err) {
     // Never log err.message or the request URL: the URL contains the bot token.
-    console.error(`lead: telegram request failed (${err?.name || 'Error'})`);
+    console.error(`lead: telegram request failed (${safeToken(err?.name) || 'Error'})`);
     return false;
   }
 }
@@ -297,19 +205,9 @@ async function handle(request) {
     return json(500, { ok: false, error: 'server_config' });
   }
 
-  // Signing in is optional: no header means an anonymous lead, as before. A header
-  // that fails the check also gives an anonymous lead, reported as linked: false.
-  const authHeader = request.headers.get('authorization');
-  let user = null;
-  if (authHeader !== null) {
-    const token = bearerToken(authHeader);
-    if (token) user = await verifiedUser(token);
-    else console.error('lead: malformed authorization header');
-  }
-
-  const [saved, notified] = await Promise.all([saveLead(toRow(lead, user)), notifyTelegram(lead, user)]);
-  if (!saved && !notified) return json(502, { ok: false, error: 'delivery_failed' });
-  return json(200, authHeader === null ? { ok: true } : { ok: true, linked: saved === 'linked' });
+  const notified = await notifyTelegram(lead);
+  if (!notified) return json(502, { ok: false, error: 'delivery_failed' });
+  return json(200, { ok: true });
 }
 
 export default {
@@ -317,7 +215,7 @@ export default {
     try {
       return await handle(request);
     } catch (err) {
-      console.error(`lead: unexpected error (${err?.name || 'Error'})`);
+      console.error(`lead: unexpected error (${safeToken(err?.name) || 'Error'})`);
       return json(500, { ok: false, error: 'server_error' });
     }
   },

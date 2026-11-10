@@ -169,7 +169,6 @@ textarea.lead-input{min-height:120px;resize:vertical}
 <div class="fact glass glass-dim"><div class="hd" style="font-size:36px;line-height:1.1">1 200</div><div style="font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">штук в коробе</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
-<a class="sq glass" href="mailto:kanat.sadykhan@gmail.com" aria-label="Написать на почту"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></a>
 <a class="sq glass" href="https://t.me/kanatsadykhan" target="_blank" rel="noopener" aria-label="Написать в Telegram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path></svg></a>
 <a class="sq glass" href="https://wa.me/77017212911" target="_blank" rel="noopener" aria-label="Написать в WhatsApp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"></path></svg></a>
 </div>
@@ -364,8 +363,7 @@ textarea.lead-input{min-height:120px;resize:vertical}
 <div class="cta-row">
 <div class="glass glass-dim" style="border-radius:1.25rem;width:min(100%,460px)">
 <a class="contact-row" href="https://t.me/kanatsadykhan" target="_blank" rel="noopener"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path></svg><span><span style="display:block;font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">Telegram</span><span class="hd" style="font-size:20px">@kanatsadykhan</span></span></a>
-<a class="contact-row" href="https://wa.me/77017212911" target="_blank" rel="noopener"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"></path></svg><span><span style="display:block;font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">WhatsApp</span><span class="hd" style="font-size:20px">+7 701 721 29 11</span></span></a>
-<a class="contact-row" href="mailto:kanat.sadykhan@gmail.com" style="border-bottom:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg><span style="min-width:0"><span style="display:block;font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">Почта</span><span class="hd" style="font-size:20px;text-transform:none;overflow-wrap:anywhere">kanat.sadykhan@gmail.com</span></span></a>
+<a class="contact-row" href="https://wa.me/77017212911" target="_blank" rel="noopener" style="border-bottom:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"></path></svg><span><span style="display:block;font-size:11px;letter-spacing:.1em;color:rgba(255,246,229,.75)">WhatsApp</span><span class="hd" style="font-size:20px">+7 701 721 29 11</span></span></a>
 </div>
 
 <div style="position:relative;flex:1 1 520px;max-width:900px;margin-left:auto;text-align:right;padding-top:56px">
@@ -424,11 +422,9 @@ textarea.lead-input{min-height:120px;resize:vertical}
 </div>
 <label class="lead-consent lead-wide" for="lead-consent">
 <input id="lead-consent" type="checkbox" name="consent" required>
-<span>Я согласен(а) на обработку персональных данных для ответа на заявку (<a href="privacy/" target="_blank" rel="noopener">как обрабатываются данные</a>)</span>
+<span>Я согласен(а) на обработку персональных данных для ответа на заявку и на их передачу владельцу в Telegram (<a href="privacy/" target="_blank" rel="noopener">как обрабатываются данные</a>)</span>
 </label>
 </div>
-<sc-if value="{{ authSignedOut }}"><p class="lead-auth">Есть аккаунт? <a href="cabinet/">Войдите</a>, чтобы видеть свои заявки. Можно и без входа.</p></sc-if>
-<sc-if value="{{ authSignedIn }}"><p class="lead-auth">Вы вошли как {{ authEmail }}. Заявка появится в <a href="cabinet/">кабинете</a>.</p></sc-if>
 <button class="btn btn-accent" type="submit" disabled="{{ leadSending }}">{{ leadButton }}</button>
 <div aria-live="polite">
 <sc-if value="{{ leadError }}"><p class="lead-status lead-error">Не удалось отправить заявку. Попробуйте ещё раз чуть позже.</p></sc-if>
@@ -444,8 +440,6 @@ textarea.lead-input{min-height:120px;resize:vertical}
 <li><span class="hd">02</span><span>Свяжемся по контакту, который вы указали, и пришлём прайс и условия.</span></li>
 <li><span class="hd">03</span><span>Если отметили образцы — договоримся, как их передать.</span></li>
 </ol>
-<sc-if value="{{ leadLinked }}"><p class="lead-auth">Заявка уже в <a href="cabinet/">кабинете</a>.</p></sc-if>
-<sc-if value="{{ leadUnlinked }}"><p class="lead-auth">Заявка принята, но не привязана к кабинету: <a href="cabinet/">войдите заново</a>, чтобы следующие заявки были там.</p></sc-if>
 </div>
 </sc-if>
 </div>
@@ -464,40 +458,19 @@ textarea.lead-input{min-height:120px;resize:vertical}
 <script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFD22E","options":["#FFD22E","#FF6B1A","#4DBB4A","#E62544"]},"$preview":{"width":1440,"height":7600}}'>
 class Component extends DCLogic {
 // Lead form: idle | sending | success | error | limited. The browser only knows
-// the relative endpoint; keys live in the server function's environment.
-// Sign-in is optional: cabinet/auth.js loads only when this browser already
-// holds a Supabase session, and then the request carries its access token.
-state = { lead: 'idle', authEmail: '', linked: null };
-componentDidMount() {
-let stored = false;
-try { stored = Object.keys(localStorage).some((key) => /^sb-.+-auth-token$/.test(key)); } catch (e) {}
-if (!stored) return;
-this.authClient = import(new URL('cabinet/auth.js', document.baseURI).href).then((m) => m.getClient()).catch(() => null);
-this.session().then((session) => session && this.setState({ authEmail: session.user.email || 'аккаунт' }));
-}
-session = async () => {
-try {
-const client = this.authClient ? await this.authClient : null;
-return client ? (await client.auth.getSession()).data.session : null;
-} catch (e) {
-return null;
-}
-};
+// the relative endpoint; keys live in the server function's environment. The
+// lead is delivered to the owner's Telegram and is not stored anywhere.
+state = { lead: 'idle' };
 submitLead = async (event) => {
 event.preventDefault();
 if (this.state.lead === 'sending') return;
 const data = new FormData(event.currentTarget);
 this.setState({ lead: 'sending' });
 let next = 'error';
-let linked = null;
 try {
-const headers = { 'Content-Type': 'application/json' };
-// getSession() refreshes an expired token; no session means an anonymous lead.
-const session = await this.session();
-if (session) headers.Authorization = 'Bearer ' + session.access_token;
 const res = await fetch('api/lead', {
 method: 'POST',
-headers,
+headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({
 name: data.get('name'),
 contact: data.get('contact'),
@@ -510,9 +483,8 @@ website: data.get('website')
 })
 });
 next = res.ok ? 'success' : res.status === 429 ? 'limited' : 'error';
-if (res.ok && session) linked = (await res.json().catch(() => ({}))).linked === true;
 } catch (e) {}
-this.setState({ lead: next, linked });
+this.setState({ lead: next });
 };
 renderVals() {
 // tx/ty: the flavor's cell in the 3×2 grid assets/flavors/tiles.webp
@@ -526,11 +498,6 @@ leadSending: lead === 'sending',
 leadError: lead === 'error',
 leadLimited: lead === 'limited',
 leadButton: lead === 'sending' ? 'Отправляем…' : 'Запросить прайс',
-leadLinked: this.state.linked === true,
-leadUnlinked: this.state.linked === false,
-authSignedIn: !!this.state.authEmail,
-authSignedOut: !this.state.authEmail,
-authEmail: this.state.authEmail,
 onLeadSubmit: this.submitLead,
 flavors: [
 { name: 'Яблоко', tx: '0%', ty: '0%', sheet: S('apple'), c1: '#4DBB4A', c2: '#2F8F2E', ink: '#1E1F26', glow: 'rgba(77,187,74,.45)' },
