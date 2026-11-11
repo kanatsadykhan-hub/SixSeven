@@ -209,7 +209,11 @@ function landingSeo() {
     google && `<meta name="google-site-verification" content="${x(google)}">`,
     yandex && `<meta name="yandex-verification" content="${x(yandex)}">`,
   ].filter(Boolean).map((tag) => tag + '\n').join('');
-  return `${verify}<meta name="description" content="${x(cfg.landingDescription)}">
+  return `${verify}<link rel="icon" href="${cfg.basePath}assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="${cfg.basePath}assets/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="${cfg.basePath}assets/favicon-16x16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="${cfg.basePath}assets/apple-touch-icon.png">
+<meta name="description" content="${x(cfg.landingDescription)}">
 <link rel="canonical" href="${abs()}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="${x(cfg.siteName)}">

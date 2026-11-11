@@ -26,7 +26,10 @@ export function layout({ cfg, rel, canonical, title, description, ogType, ogImag
 <meta property="og:image" content="${e(ogImage)}">
 <meta property="og:image:alt" content="${e(ogImageAlt)}">
 <meta name="twitter:card" content="summary_large_image">
-${feedUrl ? `<link rel="alternate" type="application/rss+xml" title="${e(cfg.blogTitle)}" href="${e(feedUrl)}">\n` : ''}<link rel="icon" href="${rel}${cfg.logo}">
+${feedUrl ? `<link rel="alternate" type="application/rss+xml" title="${e(cfg.blogTitle)}" href="${e(feedUrl)}">\n` : ''}<link rel="icon" href="${rel}assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="${rel}assets/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="${rel}assets/favicon-16x16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="${rel}assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}">

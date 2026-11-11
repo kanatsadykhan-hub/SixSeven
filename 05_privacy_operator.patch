@@ -1,0 +1,16 @@
+diff --git a/privacy/index.html b/privacy/index.html
+index 30304cf..2a90bb0 100644
+--- a/privacy/index.html
++++ b/privacy/index.html
+@@ -39,9 +39,9 @@
+ <h2>Кто обрабатывает данные</h2>
+ <ul>
+ <li>Оператор: ИП Аубакиров Канат Садыханулы;</li>
+-<li>ИИН: <span class="todo">[укажите ИИН]</span>;</li>
++<li>Реквизиты ИП предоставляются по запросу;</li>
+ <li>Адрес: Республика Казахстан, г. Алматы;</li>
+-<li>Контакт по вопросам персональных данных: Telegram <a href="https://t.me/kanatsadykhan">@kanatsadykhan</a>, WhatsApp +7 701 721 29 11 (после запуска почты — info@67lollipops.kz).</li>
++<li>Контакт по вопросам персональных данных: <a href="mailto:info@67lollipops.kz">info@67lollipops.kz</a>, Telegram <a href="https://t.me/kanatsadykhan">@kanatsadykhan</a>, WhatsApp +7 701 721 29 11.</li>
+ </ul>
+ 
+ <h2>Какие данные собираются</h2>
