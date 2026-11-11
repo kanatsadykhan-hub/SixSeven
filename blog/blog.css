@@ -10,7 +10,7 @@ img{max-width:100%;height:auto}
 
 /* Header / footer */
 .site-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:24px;padding-bottom:24px}
-.logo img{display:block;height:72px;width:auto}
+.logo img{display:block;height:84px;width:auto}
 .site-nav{display:flex;align-items:center;gap:24px;font-family:'Oswald','Arial Narrow',sans-serif;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
 .site-nav a:not(.btn){text-decoration:none}
 .site-nav a:not(.btn):hover{color:var(--accent)}
