@@ -10,7 +10,7 @@ img{max-width:100%;height:auto}
 
 /* Header / footer */
 .site-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:24px;padding-bottom:24px}
-.logo img{display:block;height:56px;width:auto}
+.logo img{display:block;height:72px;width:auto}
 .site-nav{display:flex;align-items:center;gap:24px;font-family:'Oswald','Arial Narrow',sans-serif;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
 .site-nav a:not(.btn){text-decoration:none}
 .site-nav a:not(.btn):hover{color:var(--accent)}
@@ -20,7 +20,7 @@ img{max-width:100%;height:auto}
 .btn-accent:hover{background:#FFE170}
 .site-footer{margin-top:96px;padding:32px 0 40px;border-top:1px solid var(--line);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim)}
 .footer-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 32px}
-.footer-row img{height:48px;width:auto;display:block}
+.footer-row img{height:56px;width:auto;display:block}
 .footer-row a{text-decoration:none}
 .footer-row a:hover{color:var(--accent)}
 
@@ -75,7 +75,7 @@ h1{font-size:clamp(32px,5.4vw,64px);margin-bottom:16px}
 @media (max-width:640px){
 .site-nav{gap:14px}
 .site-nav .btn{min-height:42px;padding:0 16px;font-size:13px}
-.logo img{height:44px}
+.logo img{height:56px}
 .answer{padding:20px;font-size:16px}
 body{font-size:15px}
 }
