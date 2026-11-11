@@ -41,7 +41,7 @@ ${jsonLd(graph)}
 <body>
 <div class="grain" aria-hidden="true"></div>
 <header class="site-header wrap">
-<a class="logo" href="${home}"><img src="${rel}${cfg.logo}" alt="Six Seven — на главную" width="151" height="68"></a>
+<a class="logo" href="${home}"><img src="${rel}${cfg.logo}" alt="Six Seven — на главную" width="71" height="68"></a>
 <nav class="site-nav" aria-label="Основное меню">
 <a href="${rel}blog/">Блог</a>
 <a class="btn btn-accent" href="${home}#contact">Получить прайс</a>
@@ -52,7 +52,7 @@ ${body}
 </main>
 <footer class="site-footer">
 <div class="wrap footer-row">
-<img src="${rel}${cfg.logo}" alt="Six Seven" width="106" height="48">
+<img src="${rel}${cfg.logo}" alt="Six Seven" width="50" height="48">
 <nav aria-label="Ссылки в подвале"><a href="${home}">Главная</a> · <a href="${rel}blog/">Блог</a></nav>
 <div class="legal">ИП Аубакиров Канат Садыханулы · Алматы, Казахстан · © 2026 Six Seven</div>
 </div>

@@ -27,7 +27,8 @@ export default {
   // Paths below are relative to the site root.
   ogImage: 'assets/a7507885109323621e057f3ff10ef703.jpg',
   ogImageAlt: 'Три героя Six Seven в форме с номером 67 смотрят на сказочный замок из сладостей с цифрами 67',
-  logo: 'assets/ad5b066d2c1a4a734994e0da8b572788.png',
+  logo: 'assets/logo.svg',
+  logoRaster: 'assets/logo.png',
   landingTitle: 'Six Seven — леденцы для партнёров',
   landingDescription: 'Леденцы на палочке Six Seven с героями мема «67»: шесть вкусов, красители и ароматизаторы, стойка на кассу. Условия для партнёров в Казахстане.',
   landingPostCount: 3,
