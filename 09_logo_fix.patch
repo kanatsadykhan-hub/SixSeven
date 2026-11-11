@@ -1,0 +1,65 @@
+diff --git a/cabinet/index.html b/cabinet/index.html
+index 222978f..150c64a 100644
+--- a/cabinet/index.html
++++ b/cabinet/index.html
+@@ -6,7 +6,7 @@
+ <title>Кабинет — Six Seven</title>
+ <meta name="description" content="Вход для партнёров Six Seven: ваши заявки на прайс в одном месте.">
+ <meta name="robots" content="noindex">
+-<link rel="icon" href="../assets/ad5b066d2c1a4a734994e0da8b572788.png">
++<link rel="icon" href="../assets/logo.svg">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&amp;family=Pacifico&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+@@ -54,7 +54,7 @@
+ <body>
+ <div class="grain" aria-hidden="true"></div>
+ <header class="site-header wrap">
+-<a class="logo" href="../"><img src="../assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven — на главную" width="151" height="68"></a>
++<a class="logo" href="../"><img src="../assets/logo.svg" alt="Six Seven — на главную" width="151" height="68"></a>
+ <nav class="site-nav" aria-label="Основное меню">
+ <a href="../blog/">Блог</a>
+ <a class="btn btn-accent" href="../#lead">Запросить прайс</a>
+@@ -115,7 +115,7 @@
+ </main>
+ <footer class="site-footer">
+ <div class="wrap footer-row">
+-<img src="../assets/ad5b066d2c1a4a734994e0da8b572788.png" alt="Six Seven" width="106" height="48">
++<img src="../assets/logo.svg" alt="Six Seven" width="106" height="48">
+ <nav aria-label="Ссылки в подвале"><a href="../">Главная</a> · <a href="../blog/">Блог</a></nav>
+ <div class="legal">ИП Аубакиров Канат Садыханулы · Алматы, Казахстан · © 2026 Six Seven</div>
+ </div>
+diff --git a/scripts/build.mjs b/scripts/build.mjs
+index 5588d41..5536a46 100644
+--- a/scripts/build.mjs
++++ b/scripts/build.mjs
+@@ -51,7 +51,7 @@ const publisher = {
+   '@type': 'Organization',
+   name: cfg.siteName,
+   url: abs(),
+-  logo: { '@type': 'ImageObject', url: abs(cfg.logoRaster) },
++  logo: { '@type': 'ImageObject', url: abs(cfg.logo) },
+ };
+ 
+ function crumbsLd(items) {
+@@ -201,7 +201,7 @@ function replaceBlock(html, name, content) {
+ 
+ function landingSeo() {
+   const graph = [
+-    { '@type': 'Organization', name: cfg.siteName, url: abs(), logo: abs(cfg.logoRaster) },
++    { '@type': 'Organization', name: cfg.siteName, url: abs(), logo: abs(cfg.logo) },
+     { '@type': 'WebSite', name: cfg.siteName, url: abs(), inLanguage: cfg.lang },
+   ];
+   const { google, yandex } = cfg.verification || {};
+diff --git a/site.config.mjs b/site.config.mjs
+index 2e3d7d2..4c9cdfd 100644
+--- a/site.config.mjs
++++ b/site.config.mjs
+@@ -28,7 +28,6 @@ export default {
+   ogImage: 'assets/a7507885109323621e057f3ff10ef703.jpg',
+   ogImageAlt: 'Три героя Six Seven в форме с номером 67 смотрят на сказочный замок из сладостей с цифрами 67',
+   logo: 'assets/logo.svg',
+-  logoRaster: 'assets/logo.png',
+   landingTitle: 'Six Seven — леденцы для партнёров',
+   landingDescription: 'Леденцы на палочке Six Seven с героями мема «67»: шесть вкусов, красители и ароматизаторы, стойка на кассу. Условия для партнёров в Казахстане.',
+   landingPostCount: 3,

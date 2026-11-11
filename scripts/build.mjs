@@ -51,7 +51,7 @@ const publisher = {
   '@type': 'Organization',
   name: cfg.siteName,
   url: abs(),
-  logo: { '@type': 'ImageObject', url: abs(cfg.logoRaster) },
+  logo: { '@type': 'ImageObject', url: abs(cfg.logo) },
 };
 
 function crumbsLd(items) {
@@ -201,7 +201,7 @@ function replaceBlock(html, name, content) {
 
 function landingSeo() {
   const graph = [
-    { '@type': 'Organization', name: cfg.siteName, url: abs(), logo: abs(cfg.logoRaster) },
+    { '@type': 'Organization', name: cfg.siteName, url: abs(), logo: abs(cfg.logo) },
     { '@type': 'WebSite', name: cfg.siteName, url: abs(), inLanguage: cfg.lang },
   ];
   const { google, yandex } = cfg.verification || {};
