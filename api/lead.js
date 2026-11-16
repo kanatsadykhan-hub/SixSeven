@@ -82,7 +82,9 @@ function validate(body) {
 
   if (body.consent !== true) errors.push('consent');
 
-  return { errors, lead: { name, contact, message, pointType, points, samples: body.samples === true } };
+  // source: a short campaign tag from the landing URL (?s=gads, ?s=stand…). Not
+  // personal data; safeToken allows only [A-Za-z0-9_], so nothing else leaks.
+  return { errors, lead: { name, contact, message, pointType, points, samples: body.samples === true, source: safeToken(body.source) } };
 }
 
 // Labelled lines for the optional chips; only whitelisted values reach them.
@@ -104,6 +106,7 @@ function telegramText(lead) {
   const line = (label, value) => `<b>${label}:</b> ${escapeHtml(value)}`;
   return [
     '<b>Новая заявка с сайта Six Seven</b>',
+    ...(lead.source ? [line('Источник', lead.source)] : []),
     line('Имя', lead.name),
     line('Контакт', lead.contact),
     ...detailLines(lead).map(escapeHtml),

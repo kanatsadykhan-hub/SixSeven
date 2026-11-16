@@ -485,7 +485,8 @@ pointType: data.get('pointType'),
 points: data.get('points'),
 samples: data.get('samples') === 'on',
 consent: data.get('consent') === 'on',
-website: data.get('website')
+website: data.get('website'),
+source: new URLSearchParams(location.search).get('s') || ''
 })
 });
 next = res.ok ? 'success' : res.status === 429 ? 'limited' : 'error';
